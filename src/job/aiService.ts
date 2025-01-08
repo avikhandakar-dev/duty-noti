@@ -18,7 +18,7 @@ async function sendPushNotificationsInBatches(
   tokens: string[]
 ) {
   const endpoint = "https://exp.host/--/api/v2/push/send";
-  const batchSize = 600;
+  const batchSize = 500;
   for (let i = 0; i < tokens.length; i += batchSize) {
     const batch = tokens.slice(i, i + batchSize);
 
@@ -35,7 +35,10 @@ async function sendPushNotificationsInBatches(
         response.data
       );
     } catch (error: any) {
-      console.error(`Error sending batch ${i / batchSize + 1}:`, error.message);
+      console.error(
+        `Error sending batch ${i / batchSize + 1}:`,
+        JSON.stringify(error.response.data)
+      );
     }
 
     // Wait for 1 second before sending the next batch
