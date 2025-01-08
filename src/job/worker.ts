@@ -15,7 +15,7 @@ const workers: Workers = {
 };
 
 const aiWorker = new Worker(
-  "ai-operation",
+  "noti-operation",
   async (job) => {
     try {
       const data = job.data;

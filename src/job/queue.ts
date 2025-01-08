@@ -1,7 +1,7 @@
 import { Queue } from "bullmq";
 import { redis } from "../lib/redis";
 
-const aiQueue = new Queue("ai-operation", {
+const aiQueue = new Queue("noti-operation", {
   connection: redis,
   defaultJobOptions: {
     removeOnComplete: {
