@@ -103,8 +103,8 @@ async function sendPushNotiAnalysis(data: any) {
           entityId: analysisId,
         });
         ids.push(userId);
-        tokens.push(token.token);
       }
+      tokens.push(token.token);
     }
     await sendPushNotificationsInBatches(title, message, tokens);
     await prisma.notification.createMany({
