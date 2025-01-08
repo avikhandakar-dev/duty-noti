@@ -14,11 +14,11 @@ const sendAnalysisSchema = z.object({
   title: z.string(),
   message: z.string(),
   companyName: z.string(),
-  price: z.string(),
-  changePer: z.string(),
-  photoDark: z.string(),
-  photoLight: z.string(),
-  content: z.string(),
+  price: z.string().optional(),
+  changePer: z.string().optional(),
+  photoDark: z.string().optional(),
+  photoLight: z.string().optional(),
+  content: z.string().optional(),
 });
 
 const sendPushNotification = async (req: any, res: Response) => {
