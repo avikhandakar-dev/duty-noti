@@ -1,0 +1,502 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris_ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+// *********************
+// Chat
+// *********************
+
+model Conversation {
+    id        String    @id @default(cuid())
+    name      String?
+    userId    String
+    deleted   Boolean   @default(false)
+    createdAt DateTime  @default(now()) @map("created_at")
+    updatedAt DateTime  @updatedAt @map("updated_at")
+    messages  Message[]
+}
+
+model Message {
+    id             String          @id @default(cuid())
+    text           String?
+    user           Json?
+    template       MessageTemplate @default(General)
+    conversation   Conversation    @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+    conversationId String
+    createdAt      DateTime        @default(now()) @map("created_at")
+    updatedAt      DateTime        @updatedAt @map("updated_at")
+    FeedMessage    FeedMessage?
+}
+
+model FeedMessage {
+    id            String    @id @default(cuid())
+    userInfo      Json?
+    question      String
+    message       Message   @relation(fields: [messageId], references: [id], onDelete: Cascade)
+    messageId     String    @unique
+    createdAt     DateTime  @default(now()) @map("created_at")
+    updatedAt     DateTime  @updatedAt @map("updated_at")
+    viewCount     Int       @default(0)
+    commentsCount Int       @default(0)
+    fViews        Int       @default(0)
+    fLikes        Int       @default(0)
+    fDislikes     Int       @default(0)
+    reacts        React[]
+    views         View[]
+    comments      Comment[]
+}
+
+model React {
+    userId        String
+    feedMessageId String
+    message       FeedMessage @relation(fields: [feedMessageId], references: [id], onDelete: Cascade)
+    type          ReactType
+    createdAt     DateTime    @default(now()) @map("created_at")
+
+    @@id([userId, feedMessageId])
+}
+
+model View {
+    userId        String
+    feedMessageId String
+    message       FeedMessage @relation(fields: [feedMessageId], references: [id], onDelete: Cascade)
+    createdAt     DateTime    @default(now()) @map("created_at")
+
+    @@id([userId, feedMessageId])
+}
+
+model Comment {
+    id            String      @id @default(cuid())
+    text          String
+    isBot         Boolean     @default(false)
+    userInfo      Json?
+    feedMessageId String
+    message       FeedMessage @relation(fields: [feedMessageId], references: [id], onDelete: Cascade)
+    createdAt     DateTime    @default(now()) @map("created_at")
+    updatedAt     DateTime    @updatedAt @map("updated_at")
+}
+
+enum ReactType {
+    Like
+    Dislike
+}
+
+enum MessageTemplate {
+    General
+    Finance
+    Forex
+}
+
+// *********************
+// Support
+// *********************
+model Support {
+    id        String   @id @default(cuid())
+    subject   String
+    message   String
+    userId    String
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+}
+
+// *********************
+// Push
+// *********************
+model PushNotificationToken {
+    id        String   @id @default(cuid())
+    token     String   @unique
+    userId    String
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+}
+
+// *********************
+// KB
+// *********************
+model KBase {
+    id        String   @id @default(cuid())
+    url       String   @unique
+    symbol    String?
+    price     String?
+    content   String
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+}
+
+model DsebdIndex {
+    id              String   @id @default(cuid())
+    country         String   @unique @default("BD")
+    dseXIndex       String[]
+    dseSIndex       String[]
+    ds30Index       String[]
+    totalTrade      String
+    totalVolume     String
+    totalValue      String
+    issuesAdvanced  String
+    issuesDeclined  String
+    issuesUnchanged String
+    summary         String?
+    docsUrl         String?
+    docsTitle       String?
+    docsUpdatedAt   String?
+    createdAt       DateTime @default(now()) @map("created_at")
+    updatedAt       DateTime @updatedAt @map("updated_at")
+}
+
+model LivePrice {
+    id             String   @id @default(cuid())
+    country        String   @unique @default("BD")
+    content        Json?
+    topGainers     Json?
+    biggestLosers  Json?
+    mostActive     Json?
+    mostVolatile   Json?
+    bestPerforming Json?
+    mostExpensive  Json?
+    pennyStocks    Json?
+    overbought     Json?
+    oversold       Json?
+    allTimeHigh    Json?
+    allTimeLow     Json?
+    high52         Json?
+    low52          Json?
+    createdAt      DateTime @default(now()) @map("created_at")
+    updatedAt      DateTime @updatedAt @map("updated_at")
+}
+
+model Notification {
+    id          String   @id @default(cuid())
+    isRead      Boolean  @default(false)
+    type        String?
+    entityId    String?
+    title       String?
+    message     String
+    userId      String
+    companyName String?
+    logo        String?
+    createdAt   DateTime @default(now()) @map("created_at")
+    updatedAt   DateTime @updatedAt @map("updated_at")
+}
+
+model AiNotification {
+    id        String   @id @default(cuid())
+    isRead    Boolean  @default(false)
+    content   String?
+    userId    String
+    symbol    String
+    title     String
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+}
+
+model Analysis {
+    id          String   @id @default(cuid())
+    title       String
+    message     String
+    companyName String
+    price       String?
+    changePer   String?
+    photoLight  String?
+    photoDark   String?
+    content     String?
+    createdAt   DateTime @default(now()) @map("created_at")
+    updatedAt   DateTime @updatedAt @map("updated_at")
+}
+
+model Alerm {
+    id        String         @id @default(cuid())
+    userId    String
+    price     Float
+    symbol    String
+    condition PriceCondition @default(Up)
+    done      Boolean        @default(false)
+    createdAt DateTime       @default(now()) @map("created_at")
+    updatedAt DateTime       @updatedAt @map("updated_at")
+
+    @@unique([userId, symbol])
+}
+
+model AiAlerm {
+    id        String   @id @default(cuid())
+    userId    String
+    prompt    String
+    symbol    String
+    done      Boolean  @default(false)
+    sendCount Int      @default(0)
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    @@unique([userId, symbol, done])
+}
+
+enum PriceCondition {
+    Up
+    Down
+}
+
+model Fav {
+    id        String   @id @default(cuid())
+    userId    String
+    symbol    String
+    currency  String
+    price     String
+    volume    String
+    change    String
+    logo      String?
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    @@unique([userId, symbol])
+}
+
+model Market {
+    id             String   @id @default(cuid())
+    symbol         String   @unique
+    country        String   @default("BD")
+    ltp            String?
+    open           String?
+    trade          String?
+    value          String?
+    high           String?
+    low            String?
+    close          String?
+    change         String?
+    changePer      String?
+    volume         String?
+    fullName       String?
+    date           String?
+    topGainer      Boolean  @default(false)
+    biggestLosers  Boolean  @default(false)
+    mostActive     Boolean  @default(false)
+    bestPerforming Boolean  @default(false)
+    createdAt      DateTime @default(now()) @map("created_at")
+    updatedAt      DateTime @updatedAt @map("updated_at")
+
+    @@unique([symbol, date])
+}
+
+model MarketData {
+    id                                        String   @id @default(cuid())
+    symbol                                    String
+    content                                   String?
+    country                                   String   @default("BD")
+    name                                      String?
+    description                               String?
+    logoid                                    String?
+    update_mode                               String?
+    type                                      String?
+    close                                     String?
+    pricescale                                String?
+    minmov                                    String?
+    fractional                                String?
+    minmove2                                  String?
+    currency                                  String?
+    change                                    String?
+    volume                                    String?
+    relative_volume_10d_calc                  String?
+    market_cap_basic                          String?
+    fundamental_currency_code                 String?
+    price_earnings_ttm                        String?
+    earnings_per_share_diluted_ttm            String?
+    earnings_per_share_diluted_yoy_growth_ttm String?
+    dividends_yield_current                   String?
+    sector_tr                                 String?
+    market                                    String?
+    sector                                    String?
+    recommendation_mark                       String?
+    perf_1y_marketcap                         String?
+    price_earnings_growth_ttm                 String?
+    price_sales_current                       String?
+    price_book_fq                             String?
+    price_to_cash_f_operating_activities_ttm  String?
+    price_free_cash_flow_ttm                  String?
+    price_to_cash_ratio                       String?
+    enterprise_value_current                  String?
+    enterprise_value_to_revenue_ttm           String?
+    enterprise_value_to_ebit_ttm              String?
+    enterprise_value_ebitda_ttm               String?
+    dps_common_stock_prim_issue_fy            String?
+    dps_common_stock_prim_issue_fq            String?
+    dividends_yield                           String?
+    dividend_payout_ratio_ttm                 String?
+    dps_common_stock_prim_issue_yoy_growth_fy String?
+    continuous_dividend_payout                String?
+    continuous_dividend_growth                String?
+    gross_margin_ttm                          String?
+    operating_margin_ttm                      String?
+    pre_tax_margin_ttm                        String?
+    net_margin_ttm                            String?
+    free_cash_flow_margin_ttm                 String?
+    return_on_assets_fq                       String?
+    return_on_equity_fq                       String?
+    return_on_invested_capital_fq             String?
+    research_and_dev_ratio_ttm                String?
+    sell_gen_admin_exp_other_ratio_ttm        String?
+    total_revenue_ttm                         String?
+    total_revenue_yoy_growth_ttm              String?
+    gross_profit_ttm                          String?
+    oper_income_ttm                           String?
+    net_income_ttm                            String?
+    ebitda_ttm                                String?
+    total_assets_fq                           String?
+    total_current_assets_fq                   String?
+    cash_n_short_term_invest_fq               String?
+    total_liabilities_fq                      String?
+    total_debt_fq                             String?
+    net_debt_fq                               String?
+    total_equity_fq                           String?
+    current_ratio_fq                          String?
+    quick_ratio_fq                            String?
+    debt_to_equity_fq                         String?
+    cash_n_short_term_invest_to_total_debt_fq String?
+    cash_f_operating_activities_ttm           String?
+    cash_f_investing_activities_ttm           String?
+    cash_f_financing_activities_ttm           String?
+    free_cash_flow_ttm                        String?
+    capital_expenditures_ttm                  String?
+    recommend_all                             String?
+    recommend_ma                              String?
+    recommend_other                           String?
+    rsi                                       String?
+    mom                                       String?
+    ao                                        String?
+    cci20                                     String?
+    stoch_k                                   String?
+    stoch_d                                   String?
+    macd_macd                                 String?
+    macd_signal                               String?
+    rec_stoch_rsi                             String?
+    stoch_rsi_k                               String?
+    rec_wr                                    String?
+    w_r                                       String?
+    ema10                                     String?
+    ema20                                     String?
+    ema30                                     String?
+    ema50                                     String?
+    ema100                                    String?
+    ema200                                    String?
+    sma10                                     String?
+    sma20                                     String?
+    sma30                                     String?
+    sma50                                     String?
+    sma100                                    String?
+    sma200                                    String?
+    rec_ichimoku                              String?
+    ichimoku_bline                            String?
+    rec_vwma                                  String?
+    vwma                                      String?
+    rec_hullma9                               String?
+    hullma9                                   String?
+    createdAt                                 DateTime @default(now()) @map("created_at")
+    updatedAt                                 DateTime @updatedAt @map("updated_at")
+
+    @@unique([symbol, country])
+}
+
+model MarketList {
+    id                           String   @id @default(cuid())
+    country                      String   @unique @default("BD")
+    large_cap                    String[]
+    small_cap                    String[]
+    largest_employers            String[]
+    high_dividend                String[]
+    highest_net_income           String[]
+    highest_cash                 String[]
+    highest_profit_per_employee  String[]
+    highest_revenue_per_employee String[]
+    gainers                      String[]
+    losers                       String[]
+    volume_leaders               String[]
+    unusual_volume               String[]
+    most_volatile                String[]
+    high_beta                    String[]
+    best_performing              String[]
+    highest_revenue              String[]
+    most_expensive               String[]
+    penny_stocks                 String[]
+    overbought                   String[]
+    oversold                     String[]
+    all_time_high                String[]
+    all_time_low                 String[]
+    above_52wk_high              String[]
+    below_52wk_low               String[]
+    createdAt                    DateTime @default(now()) @map("created_at")
+    updatedAt                    DateTime @updatedAt @map("updated_at")
+}
+
+model MarketSector {
+    id                        String   @id @default(cuid())
+    country                   String   @default("BD")
+    description               String?
+    market                    String?
+    market_cap_basic          String?
+    type                      String?
+    typespecs                 String?
+    fundamental_currency_code String?
+    dividends_yield           String?
+    change                    String?
+    volume                    String?
+    elements                  String?
+    basic_elements            String?
+    perf_w                    String?
+    perf_1m                   String?
+    perf_3m                   String?
+    perf_6m                   String?
+    perf_ytd                  String?
+    perf_y                    String?
+    perf_5y                   String?
+    perf_10y                  String?
+    perf_all                  String?
+    createdAt                 DateTime @default(now()) @map("created_at")
+    updatedAt                 DateTime @updatedAt @map("updated_at")
+
+    @@unique([country, description])
+}
+
+model MarketIndustry {
+    id                        String  @id @default(cuid())
+    country                   String  @default("BD")
+    description               String?
+    market                    String?
+    market_cap_basic          String?
+    type                      String?
+    typespecs                 String?
+    fundamental_currency_code String?
+    dividends_yield           String?
+    change                    String?
+    volume                    String?
+    sector_tr                 String?
+    sector                    String?
+    basic_elements            String?
+    perf_w                    String?
+    perf_1m                   String?
+    perf_3m                   String?
+    perf_6m                   String?
+    perf_ytd                  String?
+    perf_y                    String?
+    perf_5y                   String?
+    perf_10y                  String?
+    perf_all                  String?
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    @@unique([country, description])
+}
+
+model MarketIndex {
+    id        String   @id @default(cuid())
+    country   String   @unique @default("BD")
+    overview  Json?
+    technical Json?
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+}
