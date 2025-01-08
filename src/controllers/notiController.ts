@@ -24,6 +24,7 @@ const sendAnalysisSchema = z.object({
 const sendPushNotification = async (req: any, res: Response) => {
   try {
     const { title, body } = sendSchema.parse(req.body);
+    console.log(title, body);
 
     await aiQueue.add(`send-push-notification`, {
       title,
