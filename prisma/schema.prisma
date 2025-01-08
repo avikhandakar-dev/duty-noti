@@ -180,6 +180,7 @@ model Notification {
     title       String?
     message     String
     userId      String
+    country     String   @default("BD")
     companyName String?
     logo        String?
     createdAt   DateTime @default(now()) @map("created_at")
@@ -189,6 +190,7 @@ model Notification {
 model AiNotification {
     id        String   @id @default(cuid())
     isRead    Boolean  @default(false)
+    country   String   @default("BD")
     content   String?
     userId    String
     symbol    String
@@ -201,6 +203,7 @@ model Analysis {
     id          String   @id @default(cuid())
     title       String
     message     String
+    country     String   @default("BD")
     companyName String
     price       String?
     changePer   String?
@@ -215,6 +218,7 @@ model Alerm {
     id        String         @id @default(cuid())
     userId    String
     price     Float
+    country   String         @default("BD")
     symbol    String
     condition PriceCondition @default(Up)
     done      Boolean        @default(false)
@@ -228,6 +232,7 @@ model AiAlerm {
     id        String   @id @default(cuid())
     userId    String
     prompt    String
+    country   String   @default("BD")
     symbol    String
     done      Boolean  @default(false)
     sendCount Int      @default(0)
@@ -250,6 +255,7 @@ model Fav {
     price     String
     volume    String
     change    String
+    country   String   @default("BD")
     logo      String?
     createdAt DateTime @default(now()) @map("created_at")
     updatedAt DateTime @updatedAt @map("updated_at")
