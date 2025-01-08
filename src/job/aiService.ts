@@ -69,8 +69,8 @@ async function sendPushNoti(data: any) {
           type: "push",
         });
         ids.push(userId);
-        tokens.push(token.token);
       }
+      tokens.push(token.token);
     }
     await sendPushNotificationsInBatches(title, body, tokens);
     await prisma.notification.createMany({
