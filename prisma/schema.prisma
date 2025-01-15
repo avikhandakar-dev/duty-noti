@@ -10,6 +10,17 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
+model User {
+    id        String    @id @default(cuid())
+    clerkId   String    @unique
+    email     String    @unique
+    firstName String?
+    lastName  String?
+    image     String?
+    lastSeen  DateTime?
+    createdAt DateTime  @default(now())
+}
+
 // *********************
 // Chat
 // *********************
