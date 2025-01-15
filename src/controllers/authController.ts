@@ -5,8 +5,8 @@ import { StatusCodes } from "http-status-codes";
 import { date, z } from "zod";
 
 const getUsersSchema = z.object({
-  from: z.coerce.date().optional().nullish(),
-  to: z.coerce.date().optional().nullish(),
+  from: z.coerce.date().default(new Date()),
+  to: z.coerce.date().default(new Date()),
   date: z.coerce.date().optional().nullish(),
   page: z.coerce.number().min(1).default(1),
   perPage: z.coerce.number().min(1).max(200).default(10),
@@ -46,7 +46,6 @@ const getAllUsers = async (req: any, res: Response) => {
         where: {
           ...(from && { createdAt: { gte: from } }),
           ...(to && { createdAt: { lte: to } }),
-          ...whereCondition,
         },
       }),
     ]);
@@ -62,41 +61,41 @@ const getAllUsers = async (req: any, res: Response) => {
 
 const getActiveUsers = async (req: Request, res: Response) => {
   try {
-    const { from, to, q, page, perPage } = getUsersSchema.parse(req.query);
+    let { from, to, q, page, perPage } = getUsersSchema.parse(req.query);
+
     console.log(from, to, q, page, perPage);
 
-    const messages = await prisma.message.groupBy({
-      by: ["user"],
+    const messages = await prisma.message.findMany({
       where: {
         createdAt: {
-          ...(from && { gte: from }),
-          ...(to && { lte: to }),
+          gte: from,
+          lte: to,
         },
       },
-      _count: {
-        id: true,
+      take: 1000,
+      select: {
+        conversation: {
+          select: {
+            userId: true,
+          },
+        },
       },
     });
-    console.log(messages);
-
     const userIds = messages.map((message) => {
-      return message.user;
+      return message.conversation.userId;
     });
 
-    console.log(userIds);
+    //unique user ids
+    const uniqueUserIds = [...new Set(userIds)];
+    console.log(uniqueUserIds);
 
     const offset = (page - 1) * perPage;
     let whereCondition = {};
-    if (q) {
-      whereCondition = {
-        OR: [{ firstName: { contains: q, mode: "insensitive" } }],
-      };
-    }
 
-    const [items, totalCount] = await Promise.all([
+    const [items] = await Promise.all([
       prisma.user.findMany({
         where: {
-          clerkId: { in: userIds as string[] },
+          clerkId: { in: uniqueUserIds as string[] },
         },
         skip: offset,
         take: perPage,
@@ -104,17 +103,8 @@ const getActiveUsers = async (req: Request, res: Response) => {
           createdAt: "desc",
         },
       }),
-
-      prisma.user.count({
-        where: {
-          clerkId: { in: userIds as string[] },
-          ...(from && { createdAt: { gte: from } }),
-          ...(to && { createdAt: { lte: to } }),
-          ...whereCondition,
-        },
-      }),
     ]);
-
+    const totalCount = uniqueUserIds.length;
     const totalPages = Math.ceil(totalCount / perPage);
     res
       .status(StatusCodes.OK)

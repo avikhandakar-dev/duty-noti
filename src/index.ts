@@ -14,6 +14,7 @@ import { workers } from "./job/worker";
 import { notiRoutes } from "./routes/notiRoutes";
 import { handleSocketEvents } from "./lib/socket";
 import { getAllUsers } from "./controllers/authController";
+import { authRoutes } from "./routes/authRoutes";
 
 const app = express();
 const httpServer = createServer(app);
@@ -39,7 +40,7 @@ app.use(
   })
 );
 app.use("/noti", notiRoutes);
-app.use("/auth", getAllUsers);
+app.use("/auth", authRoutes);
 app.use(errorHandlerMiddleware);
 app.use(notFoundMiddleware);
 
