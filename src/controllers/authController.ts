@@ -72,7 +72,7 @@ const getActiveUsers = async (req: Request, res: Response) => {
           lte: to,
         },
       },
-      take: 1000,
+      take: 10000,
       select: {
         conversation: {
           select: {
