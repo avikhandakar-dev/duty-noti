@@ -4,10 +4,25 @@ import { BadRequestError, UnAuthenticatedError } from "@/src/errors";
 import { StatusCodes } from "http-status-codes";
 import { z } from "zod";
 import { aiQueue } from "../job/queue";
+import { Reaction } from "@prisma/client";
 
 const sendSchema = z.object({
   title: z.string(),
   body: z.string(),
+});
+
+const commentReactionSchema = z.object({
+  reaction: z.nativeEnum(Reaction),
+  commentId: z.string(),
+  user: z.any(),
+  userId: z.string(),
+});
+
+const commentSchema = z.object({
+  user: z.any(),
+  userId: z.string(),
+  text: z.string(),
+  analysisId: z.string(),
 });
 
 const sendAnalysisSchema = z.object({
@@ -19,6 +34,7 @@ const sendAnalysisSchema = z.object({
   photoDark: z.string().optional().nullish().default(""),
   photoLight: z.string().optional().nullish().default(""),
   content: z.string().optional().nullish().default(""),
+  country: z.string().default("BD"),
 });
 
 const sendPushNotification = async (req: any, res: Response) => {
@@ -50,6 +66,7 @@ const sendAnalysis = async (req: any, res: Response) => {
       photoDark,
       photoLight,
       content,
+      country,
     } = sendAnalysisSchema.parse(req.body);
     const analysis = await prisma.analysis.create({
       data: {
@@ -61,6 +78,7 @@ const sendAnalysis = async (req: any, res: Response) => {
         photoDark,
         photoLight,
         content,
+        country,
       },
     });
     await aiQueue.add(`send-push-notification-analysis`, {
@@ -78,4 +96,81 @@ const sendAnalysis = async (req: any, res: Response) => {
   }
 };
 
-export { sendPushNotification, sendAnalysis };
+const addComment = async (req: any, res: Response) => {
+  try {
+    const { user, userId, text, analysisId } = commentSchema.parse(req.body);
+    const comment = await prisma.analysisComment.create({
+      data: {
+        user,
+        userId,
+        text,
+        analysisId,
+      },
+    });
+    res.status(StatusCodes.OK).json({ comment });
+  } catch (error: any) {
+    console.log(error);
+    throw new BadRequestError(error.message || "Something went wrong!");
+  }
+};
+
+const giveReaction = async (req: any, res: Response) => {
+  try {
+    const { reaction, commentId, userId, user } = commentReactionSchema.parse(
+      req.body
+    );
+    await prisma.analysisCommentReact.upsert({
+      where: {
+        userId_reaction_commentId: {
+          userId,
+          reaction,
+          commentId,
+        },
+      },
+      create: {
+        reaction,
+        commentId,
+        userId,
+        user,
+      },
+      update: {
+        reaction,
+      },
+    });
+    res.status(StatusCodes.OK).json({ [reaction]: true });
+  } catch (error: any) {
+    console.log(error);
+    throw new BadRequestError(error.message || "Something went wrong!");
+  }
+};
+
+const getComments = async (req: any, res: Response) => {
+  try {
+    const { analysisId } = req.params;
+    const comments = await prisma.analysisComment.findMany({
+      where: {
+        analysisId,
+      },
+      include: {
+        reacts: {
+          select: {
+            reaction: true,
+            userId: true,
+          },
+        },
+      },
+    });
+    res.status(StatusCodes.OK).json({ comments });
+  } catch (error: any) {
+    console.log(error);
+    throw new BadRequestError(error.message || "Something went wrong!");
+  }
+};
+
+export {
+  sendPushNotification,
+  sendAnalysis,
+  addComment,
+  giveReaction,
+  getComments,
+};

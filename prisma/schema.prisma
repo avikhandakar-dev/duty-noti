@@ -211,18 +211,49 @@ model AiNotification {
 }
 
 model Analysis {
-    id          String   @id @default(cuid())
+    id          String            @id @default(cuid())
     title       String
     message     String
-    country     String   @default("BD")
+    country     String            @default("BD")
     companyName String
     price       String?
     changePer   String?
     photoLight  String?
     photoDark   String?
     content     String?
-    createdAt   DateTime @default(now()) @map("created_at")
-    updatedAt   DateTime @updatedAt @map("updated_at")
+    createdAt   DateTime          @default(now()) @map("created_at")
+    updatedAt   DateTime          @updatedAt @map("updated_at")
+    comments    AnalysisComment[]
+}
+
+model AnalysisComment {
+    id         String                 @id @default(cuid())
+    user       Json
+    userId     String
+    analysis   Analysis               @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+    analysisId String
+    text       String
+    createdAt  DateTime               @default(now()) @map("created_at")
+    updatedAt  DateTime               @updatedAt @map("updated_at")
+    reacts     AnalysisCommentReact[]
+}
+
+model AnalysisCommentReact {
+    id        String          @id @default(cuid())
+    user      Json
+    userId    String
+    comment   AnalysisComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+    commentId String
+    reaction  Reaction
+    createdAt DateTime        @default(now()) @map("created_at")
+    updatedAt DateTime        @updatedAt @map("updated_at")
+
+    @@unique([userId, reaction, commentId])
+}
+
+enum Reaction {
+    Like
+    Dislike
 }
 
 model Alerm {
