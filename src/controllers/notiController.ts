@@ -13,8 +13,7 @@ const sendSchema = z.object({
 
 const commentReactionSchema = z.object({
   reaction: z.nativeEnum(Reaction),
-  commentId: z.string(),
-  user: z.any(),
+  analysisId: z.string(),
   userId: z.string(),
 });
 
@@ -116,22 +115,42 @@ const addComment = async (req: any, res: Response) => {
 
 const giveReaction = async (req: any, res: Response) => {
   try {
-    const { reaction, commentId, userId, user } = commentReactionSchema.parse(
+    const { reaction, analysisId, userId } = commentReactionSchema.parse(
       req.body
     );
-    await prisma.analysisCommentReact.upsert({
+    const analysisReact = await prisma.analysisReact.findUnique({
       where: {
-        userId_reaction_commentId: {
+        userId_reaction_analysisId: {
           userId,
           reaction,
-          commentId,
+          analysisId,
+        },
+      },
+    });
+    if (analysisReact && analysisReact.reaction === reaction) {
+      await prisma.analysisReact.delete({
+        where: {
+          userId_reaction_analysisId: {
+            userId,
+            reaction,
+            analysisId,
+          },
+        },
+      });
+      return res.status(StatusCodes.OK).json({ [reaction]: false });
+    }
+    await prisma.analysisReact.upsert({
+      where: {
+        userId_reaction_analysisId: {
+          userId,
+          reaction,
+          analysisId,
         },
       },
       create: {
         reaction,
-        commentId,
+        analysisId,
         userId,
-        user,
       },
       update: {
         reaction,
