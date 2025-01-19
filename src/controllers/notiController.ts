@@ -118,23 +118,17 @@ const giveReaction = async (req: any, res: Response) => {
     const { reaction, analysisId, userId } = commentReactionSchema.parse(
       req.body
     );
-    const analysisReact = await prisma.analysisReact.findUnique({
+    const analysisReact = await prisma.analysisReact.findFirst({
       where: {
-        userId_reaction_analysisId: {
-          userId,
-          reaction,
-          analysisId,
-        },
+        analysisId,
+        userId,
       },
     });
     if (analysisReact) {
-      await prisma.analysisReact.delete({
+      await prisma.analysisReact.deleteMany({
         where: {
-          userId_reaction_analysisId: {
-            userId,
-            reaction,
-            analysisId,
-          },
+          analysisId,
+          userId,
         },
       });
     }
