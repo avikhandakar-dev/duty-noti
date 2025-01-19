@@ -170,14 +170,6 @@ const getComments = async (req: any, res: Response) => {
       where: {
         analysisId,
       },
-      include: {
-        reacts: {
-          select: {
-            reaction: true,
-            userId: true,
-          },
-        },
-      },
     });
     res.status(StatusCodes.OK).json({ comments });
   } catch (error: any) {
