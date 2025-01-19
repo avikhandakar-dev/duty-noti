@@ -127,15 +127,18 @@ const giveReaction = async (req: any, res: Response) => {
         },
       },
     });
-    await prisma.analysisReact.delete({
-      where: {
-        userId_reaction_analysisId: {
-          userId,
-          reaction,
-          analysisId,
+    if (analysisReact) {
+      await prisma.analysisReact.delete({
+        where: {
+          userId_reaction_analysisId: {
+            userId,
+            reaction,
+            analysisId,
+          },
         },
-      },
-    });
+      });
+    }
+
     if (analysisReact?.reaction !== reaction) {
       await prisma.analysisReact.upsert({
         where: {
