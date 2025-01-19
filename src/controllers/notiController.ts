@@ -140,21 +140,11 @@ const giveReaction = async (req: any, res: Response) => {
     }
 
     if (analysisReact?.reaction !== reaction) {
-      await prisma.analysisReact.upsert({
-        where: {
-          userId_reaction_analysisId: {
-            userId,
-            reaction,
-            analysisId,
-          },
-        },
-        create: {
+      await prisma.analysisReact.create({
+        data: {
           reaction,
           analysisId,
           userId,
-        },
-        update: {
-          reaction,
         },
       });
     }
