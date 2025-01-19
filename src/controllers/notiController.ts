@@ -127,19 +127,7 @@ const giveReaction = async (req: any, res: Response) => {
         },
       },
     });
-    if (analysisReact && analysisReact.reaction === reaction) {
-      await prisma.analysisReact.delete({
-        where: {
-          userId_reaction_analysisId: {
-            userId,
-            reaction,
-            analysisId,
-          },
-        },
-      });
-      return res.status(StatusCodes.OK).json({ [reaction]: false });
-    }
-    await prisma.analysisReact.upsert({
+    await prisma.analysisReact.delete({
       where: {
         userId_reaction_analysisId: {
           userId,
@@ -147,15 +135,26 @@ const giveReaction = async (req: any, res: Response) => {
           analysisId,
         },
       },
-      create: {
-        reaction,
-        analysisId,
-        userId,
-      },
-      update: {
-        reaction,
-      },
     });
+    if (analysisReact?.reaction !== reaction) {
+      await prisma.analysisReact.upsert({
+        where: {
+          userId_reaction_analysisId: {
+            userId,
+            reaction,
+            analysisId,
+          },
+        },
+        create: {
+          reaction,
+          analysisId,
+          userId,
+        },
+        update: {
+          reaction,
+        },
+      });
+    }
     res.status(StatusCodes.OK).json({ [reaction]: true });
   } catch (error: any) {
     console.log(error);
