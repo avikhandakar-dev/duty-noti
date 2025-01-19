@@ -170,6 +170,9 @@ const getComments = async (req: any, res: Response) => {
       where: {
         analysisId,
       },
+      orderBy: {
+        createdAt: "desc",
+      },
     });
     res.status(StatusCodes.OK).json({ comments });
   } catch (error: any) {
