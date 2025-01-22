@@ -72,11 +72,11 @@ async function sendPushNoti(data: any) {
       }
       tokens.push(token.token);
     }
-    await sendPushNotificationsInBatches(title, body, tokens);
     await prisma.notification.createMany({
       data: prismaTransaction,
       skipDuplicates: true,
     });
+    await sendPushNotificationsInBatches(title, body, tokens);
   } catch (error: any) {
     throw new Error(error.message);
   }
@@ -106,11 +106,11 @@ async function sendPushNotiAnalysis(data: any) {
       }
       tokens.push(token.token);
     }
-    await sendPushNotificationsInBatches(title, message, tokens);
     await prisma.notification.createMany({
       data: prismaTransaction,
       skipDuplicates: true,
     });
+    await sendPushNotificationsInBatches(title, message, tokens);
   } catch (error: any) {
     throw new Error(error.message);
   }
