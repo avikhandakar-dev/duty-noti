@@ -16,6 +16,9 @@ import { handleSocketEvents } from "./lib/socket";
 import { getAllUsers } from "./controllers/authController";
 import { authRoutes } from "./routes/authRoutes";
 import { updateRoutes } from "./routes/updateRoutes";
+import { startNoPortfolioScheduler } from "./cron/noPortfolio";
+import { startNoHoldingsTodayScheduler } from "./cron/noHoldingsToday";
+import { startHasHoldingsScheduler } from "./cron/hasHoldings";
 
 const app = express();
 const httpServer = createServer(app);
@@ -43,6 +46,9 @@ app.use(
 app.use("/noti", notiRoutes);
 app.use("/auth", authRoutes);
 app.use("/update", updateRoutes);
+startNoPortfolioScheduler();
+startNoHoldingsTodayScheduler();
+startHasHoldingsScheduler();
 app.use(errorHandlerMiddleware);
 app.use(notFoundMiddleware);
 

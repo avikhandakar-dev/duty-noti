@@ -12,7 +12,7 @@ const addToAIQueue = (operationType: string) => {
   }
 };
 
-async function sendPushNotificationsInBatches(
+export async function sendPushNotificationsInBatches(
   title: string,
   body: string,
   tokens: string[]

@@ -344,10 +344,10 @@ model Market {
 }
 
 model MarketData {
-    id                                        String   @id @default(cuid())
+    id                                        String        @id @default(cuid())
     symbol                                    String
     content                                   String?
-    country                                   String   @default("BD")
+    country                                   String        @default("BD")
     name                                      String?
     description                               String?
     logoid                                    String?
@@ -455,8 +455,10 @@ model MarketData {
     vwma                                      String?
     rec_hullma9                               String?
     hullma9                                   String?
-    createdAt                                 DateTime @default(now()) @map("created_at")
-    updatedAt                                 DateTime @updatedAt @map("updated_at")
+    createdAt                                 DateTime      @default(now()) @map("created_at")
+    updatedAt                                 DateTime      @updatedAt @map("updated_at")
+    rransactions                              Transaction[]
+    holdings                                  Holding[]
 
     @@unique([symbol, country])
 }
@@ -559,4 +561,73 @@ model MarketIndex {
     technical Json?
     createdAt DateTime @default(now()) @map("created_at")
     updatedAt DateTime @updatedAt @map("updated_at")
+}
+
+model Portfolio {
+    id                       String              @id @default(cuid())
+    userId                   String              @unique
+    user                     Json?
+    balance                  Float               @default(0)
+    free                     Float               @default(0)
+    holdings                 Holding[]
+    createdAt                DateTime            @default(now()) @map("created_at")
+    updatedAt                DateTime            @updatedAt @map("updated_at")
+    transactions             Transaction[]
+    withdrawOrDepositHistory WithdrawOrDeposit[]
+}
+
+model Holding {
+    id           String     @id @default(uuid())
+    portfolioId  String
+    marketDataId String
+    quantity     Int        @default(0)
+    avgCost      Float      @default(0)
+    portfolio    Portfolio  @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+    stock        MarketData @relation(fields: [marketDataId], references: [id])
+    brokerFee    Float      @default(0)
+    risk         Float      @default(0)
+    initialRisk  Float      @default(0)
+    createdAt    DateTime   @default(now())
+    updatedAt    DateTime   @updatedAt
+}
+
+model Transaction {
+    id             String          @id @default(cuid())
+    marketDataId   String
+    portfolioId    String
+    portfolio      Portfolio       @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+    stock          MarketData      @relation(fields: [marketDataId], references: [id])
+    type           TransactionType // BUY or SELL
+    quantity       Float // Number of stocks bought or sold
+    buyPrice       Float? // Price per stock at the time of the transaction
+    sellPrice      Float?
+    totalSellPrice Float?
+    totalBuyPrice  Float?
+    brokerFee      Float           @default(0)
+    profit         Float           @default(0)
+    loss           Float           @default(0)
+    risk           Float           @default(0)
+    initialRisk    Float           @default(0)
+    totalQuantity  Int             @default(0)
+    createdAt      DateTime        @default(now())
+}
+
+enum TransactionType {
+    BUY
+    SELL
+}
+
+model WithdrawOrDeposit {
+    id          String                @id @default(cuid())
+    portfolioId String
+    portfolio   Portfolio             @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+    type        WithdrawOrDepositType
+    amount      Float                 @default(0)
+    createdAt   DateTime              @default(now()) @map("created_at")
+    updatedAt   DateTime              @updatedAt @map("updated_at")
+}
+
+enum WithdrawOrDepositType {
+    DEPOSIT
+    WITHDRAW
 }
