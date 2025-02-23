@@ -3,6 +3,7 @@ import prisma from "@/src/lib/prisma";
 import { BadRequestError, UnAuthenticatedError } from "@/src/errors";
 import { StatusCodes } from "http-status-codes";
 import fetch from "node-fetch";
+import { JSDOM } from "jsdom";
 
 const indexTvJp = async (req: any, res: Response) => {
   try {
@@ -866,4 +867,251 @@ const allStocksTvJp = async (req: any, res: Response) => {
   }
 };
 
-export { indexTvJp, presetTvJp, sectorTvJp, allStocksTvJp };
+const amarstockAllMarket = async (req: any, res: Response) => {
+  try {
+    const API_URL = "https://www.amarstock.com/LatestPrice/34267d8d73dd";
+    const response = await fetch(API_URL);
+    const data = await response.json();
+    for (const item of data) {
+      try {
+        await prisma.market.upsert({
+          where: {
+            symbol: item.Scrip,
+          },
+          update: {
+            changePer: `${item.ChangePer}`,
+            ...(item.LTP != 0 && { ltp: `${item.LTP}` }),
+            high: `${item.High}`,
+            open: `${item.Open}`,
+            low: `${item.Low}`,
+            ...(item.Close != 0 && { close: `${item.Close}` }),
+            change: `${item.Change}`,
+            trade: `${item.Trade}`,
+            value: `${item.Value}`,
+            volume: `${item.Volume}`,
+            fullName: `${item.FullName}`,
+          },
+          create: {
+            symbol: item.Scrip,
+            changePer: `${item.ChangePer}`,
+            ltp: `${item.LTP}`,
+            high: `${item.High}`,
+            open: `${item.Open}`,
+            low: `${item.Low}`,
+            close: `${item.Close}`,
+            change: `${item.Change}`,
+            trade: `${item.Trade}`,
+            value: `${item.Value}`,
+            volume: `${item.Volume}`,
+            fullName: `${item.FullName}`,
+          },
+        });
+        console.log(`Upserted ${item.Scrip}`);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+    console.log("Done");
+    res.status(StatusCodes.OK).json({ success: true });
+  } catch (error: any) {
+    console.log(error);
+    throw new BadRequestError(error.message || "Something went wrong!");
+  }
+};
+
+const dsebdIndex = async (req: any, res: Response) => {
+  try {
+    const html = await fetch("https://www.dsebd.org").then((res) => res.text());
+    const dom = new JSDOM(html);
+    const document = dom.window.document;
+    const allLinks = document.querySelectorAll("div.midrow");
+    const resutls: any = [];
+    for (let i = 0; i < 3; i++) {
+      const link = allLinks[i];
+
+      if (i == 0) {
+        const dseXIndex = [
+          link?.querySelector("div:nth-child(2)")?.textContent?.trim(),
+          link?.querySelector("div:nth-child(3)")?.textContent?.trim(),
+          link?.querySelector("div:nth-child(4)")?.textContent?.trim(),
+        ];
+        resutls.push({ dseXIndex });
+      }
+      if (i == 1) {
+        const dseSIndex = [
+          link?.querySelector("div:nth-child(2)")?.textContent?.trim(),
+          link?.querySelector("div:nth-child(3)")?.textContent?.trim(),
+          link?.querySelector("div:nth-child(4)")?.textContent?.trim(),
+        ];
+        resutls.push({ dseSIndex });
+      }
+      if (i == 2) {
+        const ds30Index = [
+          link?.querySelector("div:nth-child(2)")?.textContent?.trim(),
+          link?.querySelector("div:nth-child(3)")?.textContent?.trim(),
+          link?.querySelector("div:nth-child(4)")?.textContent?.trim(),
+        ];
+        resutls.push({ ds30Index });
+      }
+    }
+    for (let i = 3; i < 7; i++) {
+      const link = allLinks[i];
+      if (i == 4) {
+        const totalTrade = link
+          ?.querySelector("div:nth-child(1)")
+          ?.textContent?.trim();
+        const totalVolume = link
+          ?.querySelector("div:nth-child(2)")
+          ?.textContent?.trim();
+        const totalValue = link
+          ?.querySelector("div:nth-child(3)")
+          ?.textContent?.trim();
+        resutls.push({
+          totalTrade,
+          totalVolume,
+          totalValue,
+        });
+      }
+      if (i == 6) {
+        const issuesAdvanced = link
+          ?.querySelector("div:nth-child(1)")
+          ?.textContent?.trim();
+        const issuesDeclined = link
+          ?.querySelector("div:nth-child(2)")
+          ?.textContent?.trim();
+        const issuesUnchanged = link
+          ?.querySelector("div:nth-child(3)")
+          ?.textContent?.trim();
+        resutls.push({
+          issuesAdvanced,
+          issuesDeclined,
+          issuesUnchanged,
+        });
+      }
+    }
+    console.log(resutls);
+    if (resutls?.length > 0) {
+      await prisma.dsebdIndex.upsert({
+        where: { country: "BD" },
+        update: {
+          dseXIndex: resutls[0].dseXIndex,
+          dseSIndex: resutls[1].dseSIndex,
+          ds30Index: resutls[2].ds30Index,
+          totalTrade: resutls[3].totalTrade,
+          totalVolume: resutls[3].totalVolume,
+          totalValue: resutls[3].totalValue,
+          issuesAdvanced: resutls[4].issuesAdvanced,
+          issuesDeclined: resutls[4].issuesDeclined,
+          issuesUnchanged: resutls[4].issuesUnchanged,
+        },
+        create: {
+          country: "BD",
+          dseXIndex: resutls[0].dseXIndex,
+          dseSIndex: resutls[1].dseSIndex,
+          ds30Index: resutls[2].ds30Index,
+          totalTrade: resutls[3].totalTrade,
+          totalVolume: resutls[3].totalVolume,
+          totalValue: resutls[3].totalValue,
+          issuesAdvanced: resutls[4].issuesAdvanced,
+          issuesDeclined: resutls[4].issuesDeclined,
+          issuesUnchanged: resutls[4].issuesUnchanged,
+        },
+      });
+    }
+    console.log("Done");
+
+    res.status(StatusCodes.OK).json({ success: true });
+  } catch (error) {
+    console.log(error);
+    throw new BadRequestError("Something went wrong!");
+  }
+};
+
+const bdCategory = async (req: any, res: Response) => {
+  try {
+    const LINKS = [
+      {
+        category: "topGainer",
+        url: "https://www.tradingview.com/markets/stocks-bangladesh/market-movers-gainers/",
+        changePos: 2,
+        pricePos: 3,
+        volPos: 4,
+      },
+      {
+        category: "biggestLosers",
+        url: "https://www.tradingview.com/markets/stocks-bangladesh/market-movers-losers/",
+        changePos: 2,
+        pricePos: 3,
+        volPos: 4,
+      },
+      {
+        category: "mostActive",
+        url: "https://www.tradingview.com/markets/stocks-bangladesh/market-movers-active/",
+        changePos: 4,
+        pricePos: 3,
+        volPos: 5,
+      },
+      {
+        category: "bestPerforming",
+        url: "https://www.tradingview.com/markets/stocks-bangladesh/market-movers-best-performing/",
+        changePos: 4,
+        pricePos: 3,
+        volPos: 5,
+      },
+    ];
+
+    const livePrices = await prisma.market.findMany({
+      where: { country: "BD" },
+    });
+
+    for (const l of LINKS) {
+      const html = await fetch(l.url).then((r) => r.text());
+      const dom = new JSDOM(html);
+      const document = dom.window.document;
+      const allLinks = document.querySelectorAll("tr.listRow");
+      const resutls = [];
+      for (let i = 0; i < allLinks.length; i++) {
+        const link = allLinks[i];
+
+        const symbolContainer = link.querySelector("td:nth-child(1) a");
+        const symbol = symbolContainer
+          ? symbolContainer?.textContent?.trim()
+          : null;
+        const data = livePrices.find((item) => item.symbol == symbol);
+        if (data) {
+          resutls.push(symbol);
+        }
+      }
+      const promises = [];
+      if (resutls.length > 0) {
+        for (const item of livePrices) {
+          const isTrue = resutls.includes(item.symbol);
+          promises.push(
+            prisma.market.update({
+              where: { id: item.id },
+              data: { [l.category]: isTrue ? true : false },
+            })
+          );
+          console.log(l.category, isTrue);
+        }
+        await Promise.all(promises);
+      }
+    }
+    console.log("Done");
+
+    res.status(StatusCodes.OK).json({ success: true });
+  } catch (error) {
+    console.log(error);
+    throw new BadRequestError("Something went wrong!");
+  }
+};
+
+export {
+  indexTvJp,
+  presetTvJp,
+  sectorTvJp,
+  allStocksTvJp,
+  amarstockAllMarket,
+  dsebdIndex,
+  bdCategory,
+};
