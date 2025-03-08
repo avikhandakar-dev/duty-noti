@@ -34,6 +34,7 @@ const sendAnalysisSchema = z.object({
   photoLight: z.string().optional().nullish().default(""),
   content: z.string().optional().nullish().default(""),
   country: z.string().default("BD"),
+  requiredPremium: z.boolean().default(false),
 });
 
 const sendPushNotification = async (req: any, res: Response) => {
@@ -66,6 +67,7 @@ const sendAnalysis = async (req: any, res: Response) => {
       photoLight,
       content,
       country,
+      requiredPremium,
     } = sendAnalysisSchema.parse(req.body);
     const analysis = await prisma.analysis.create({
       data: {
@@ -78,6 +80,7 @@ const sendAnalysis = async (req: any, res: Response) => {
         photoLight,
         content,
         country,
+        requiredPremium,
       },
     });
     await aiQueue.add(`send-push-notification-analysis`, {
@@ -85,6 +88,7 @@ const sendAnalysis = async (req: any, res: Response) => {
       message,
       companyName,
       analysisId: analysis.id,
+      requiredPremium,
       queueType: "SEND-PUSH-NOTIFICATION-ANALYSIS",
     });
 

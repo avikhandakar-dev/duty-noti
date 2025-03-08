@@ -11,14 +11,16 @@ datasource db {
 }
 
 model User {
-    id        String    @id @default(cuid())
-    clerkId   String    @unique
-    email     String    @unique
+    id        String       @id @default(cuid())
+    clerkId   String       @unique
+    email     String       @unique
     firstName String?
     lastName  String?
     image     String?
     lastSeen  DateTime?
-    createdAt DateTime  @default(now())
+    createdAt DateTime     @default(now())
+    plans     ActivePlan[]
+    orders    Order[]
 }
 
 // *********************
@@ -115,6 +117,7 @@ model Support {
     message   String
     userId    String
     reply     String?
+    image     String?
     createdAt DateTime @default(now()) @map("created_at")
     updatedAt DateTime @updatedAt @map("updated_at")
 }
@@ -185,18 +188,19 @@ model LivePrice {
 }
 
 model Notification {
-    id          String   @id @default(cuid())
-    isRead      Boolean  @default(false)
-    type        String?
-    entityId    String?
-    title       String?
-    message     String
-    userId      String
-    country     String   @default("BD")
-    companyName String?
-    logo        String?
-    createdAt   DateTime @default(now()) @map("created_at")
-    updatedAt   DateTime @updatedAt @map("updated_at")
+    id              String   @id @default(cuid())
+    isRead          Boolean  @default(false)
+    type            String?
+    entityId        String?
+    title           String?
+    message         String
+    userId          String
+    country         String   @default("BD")
+    companyName     String?
+    logo            String?
+    requiredPremium Boolean  @default(false)
+    createdAt       DateTime @default(now()) @map("created_at")
+    updatedAt       DateTime @updatedAt @map("updated_at")
 }
 
 model AiNotification {
@@ -212,20 +216,21 @@ model AiNotification {
 }
 
 model Analysis {
-    id          String            @id @default(cuid())
-    title       String
-    message     String
-    country     String            @default("BD")
-    companyName String
-    price       String?
-    changePer   String?
-    photoLight  String?
-    photoDark   String?
-    content     String?
-    createdAt   DateTime          @default(now()) @map("created_at")
-    updatedAt   DateTime          @updatedAt @map("updated_at")
-    comments    AnalysisComment[]
-    reacts      AnalysisReact[]
+    id              String            @id @default(cuid())
+    title           String
+    message         String
+    country         String            @default("BD")
+    companyName     String
+    price           String?
+    changePer       String?
+    photoLight      String?
+    photoDark       String?
+    content         String?
+    requiredPremium Boolean           @default(false)
+    createdAt       DateTime          @default(now()) @map("created_at")
+    updatedAt       DateTime          @updatedAt @map("updated_at")
+    comments        AnalysisComment[]
+    reacts          AnalysisReact[]
 }
 
 model AnalysisComment {
@@ -661,4 +666,56 @@ model Voter {
     updatedAt DateTime @updatedAt @map("updated_at")
 
     @@unique([userId, choiceId])
+}
+
+//Pricing
+model PricingPlan {
+    id             String       @id @default(cuid())
+    name           String       @unique
+    description    String?
+    price          Float
+    oldPrice       Float?
+    features       Json?
+    discount       Float?       @default(0)
+    validity       Int          @default(30)
+    pricePerDevice Float?       @default(0)
+    createdAt      DateTime     @default(now()) @map("created_at")
+    updatedAt      DateTime     @updatedAt @map("updated_at")
+    activePlan     ActivePlan[]
+    orders         Order[]
+}
+
+model Coupon {
+    id          String   @id @default(cuid())
+    code        String   @unique
+    discount    Float
+    maxDiscount Float?
+    minOrder    Float?
+    isActive    Boolean  @default(true)
+    createdAt   DateTime @default(now()) @map("created_at")
+    updatedAt   DateTime @updatedAt @map("updated_at")
+}
+
+model ActivePlan {
+    id        String      @id @default(cuid())
+    userId    String
+    user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+    planId    String
+    plan      PricingPlan @relation(fields: [planId], references: [id])
+    expiresOn DateTime?
+    createdAt DateTime    @default(now()) @map("created_at")
+    updatedAt DateTime    @updatedAt @map("updated_at")
+}
+
+model Order {
+    id        String      @id @default(cuid())
+    userId    String
+    user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+    planId    String
+    plan      PricingPlan @relation(fields: [planId], references: [id])
+    coupon    Json?
+    total     Float
+    paid      Boolean     @default(false)
+    createdAt DateTime    @default(now()) @map("created_at")
+    updatedAt DateTime    @updatedAt @map("updated_at")
 }

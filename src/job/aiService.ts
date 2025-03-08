@@ -84,7 +84,7 @@ async function sendPushNoti(data: any) {
 
 async function sendPushNotiAnalysis(data: any) {
   try {
-    const { title, message, companyName, analysisId } = data;
+    const { title, message, companyName, analysisId, requiredPremium } = data;
     const pushTokens = await prisma.pushNotificationToken.findMany();
     const ids: string[] = [];
     const tokens: string[] = [];
@@ -101,6 +101,7 @@ async function sendPushNotiAnalysis(data: any) {
           logo: "",
           type: "analysis",
           entityId: analysisId,
+          requiredPremium,
         });
         ids.push(userId);
       }
