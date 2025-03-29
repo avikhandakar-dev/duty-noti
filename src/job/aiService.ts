@@ -131,10 +131,10 @@ async function sendPushNotiToTrialUser(data: any) {
       }
       tokens.push(token.token);
     }
-    await prisma.notification.createMany({
-      data: prismaTransaction,
-      skipDuplicates: true,
-    });
+    // await prisma.notification.createMany({
+    //   data: prismaTransaction,
+    //   skipDuplicates: true,
+    // });
     await sendPushNotificationsInBatches(title, body, tokens);
   } catch (error: any) {
     throw new Error(error.message);
@@ -183,10 +183,10 @@ async function sendPushNotiToFreeUser(data: any) {
       }
       tokens.push(token.token);
     }
-    await prisma.notification.createMany({
-      data: prismaTransaction,
-      skipDuplicates: true,
-    });
+    // await prisma.notification.createMany({
+    //   data: prismaTransaction,
+    //   skipDuplicates: true,
+    // });
     await sendPushNotificationsInBatches(title, body, tokens);
   } catch (error: any) {
     throw new Error(error.message);
