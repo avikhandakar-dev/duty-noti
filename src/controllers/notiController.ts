@@ -55,6 +55,42 @@ const sendPushNotification = async (req: any, res: Response) => {
   }
 };
 
+const sendPushNotificationToTrialUser = async (req: any, res: Response) => {
+  try {
+    const { title, body } = sendSchema.parse(req.body);
+    console.log(title, body);
+
+    await aiQueue.add(`send-push-notification-to-trial-user`, {
+      title,
+      body,
+      queueType: "SEND-PUSH-NOTIFICATION-TO-TRIAL-USER",
+    });
+
+    res.status(StatusCodes.OK).json({ success: true });
+  } catch (error: any) {
+    console.log(error);
+    throw new BadRequestError(error.message || "Something went wrong!");
+  }
+};
+
+const sendPushNotificationToFreeUser = async (req: any, res: Response) => {
+  try {
+    const { title, body } = sendSchema.parse(req.body);
+    console.log(title, body);
+
+    await aiQueue.add(`send-push-notification-to-free-user`, {
+      title,
+      body,
+      queueType: "SEND-PUSH-NOTIFICATION-TO-FREE-USER",
+    });
+
+    res.status(StatusCodes.OK).json({ success: true });
+  } catch (error: any) {
+    console.log(error);
+    throw new BadRequestError(error.message || "Something went wrong!");
+  }
+};
+
 const sendAnalysis = async (req: any, res: Response) => {
   try {
     const {
@@ -177,4 +213,6 @@ export {
   addComment,
   giveReaction,
   getComments,
+  sendPushNotificationToTrialUser,
+  sendPushNotificationToFreeUser,
 };

@@ -7,6 +7,10 @@ const addToAIQueue = (operationType: string) => {
       return sendPushNoti;
     case "SEND-PUSH-NOTIFICATION-ANALYSIS":
       return sendPushNotiAnalysis;
+    case "SEND-PUSH-NOTIFICATION-TO-TRIAL-USER":
+      return sendPushNotiToTrialUser;
+    case "SEND-PUSH-NOTIFICATION-TO-FREE-USER":
+      return sendPushNotiToFreeUser;
     default:
       throw new Error("Invalid operation type");
   }
@@ -53,6 +57,113 @@ async function sendPushNoti(data: any) {
   try {
     const { title, body } = data;
     const pushTokens = await prisma.pushNotificationToken.findMany();
+    const ids: string[] = [];
+    const tokens: string[] = [];
+    const prismaTransaction: any = [];
+
+    for (let token of pushTokens) {
+      const userId = token.userId;
+
+      if (!ids.includes(userId)) {
+        prismaTransaction.push({
+          userId: userId,
+          companyName: title,
+          message: body,
+          logo: "",
+          type: "push",
+        });
+        ids.push(userId);
+      }
+      tokens.push(token.token);
+    }
+    await prisma.notification.createMany({
+      data: prismaTransaction,
+      skipDuplicates: true,
+    });
+    await sendPushNotificationsInBatches(title, body, tokens);
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+}
+
+async function sendPushNotiToTrialUser(data: any) {
+  try {
+    const { title, body } = data;
+    const trialUsers = await prisma.activePlan.findMany({
+      where: {
+        expiresOn: { gt: new Date() },
+        plan: {
+          isTrial: true,
+        },
+      },
+      select: {
+        user: {
+          select: {
+            clerkId: true,
+          },
+        },
+      },
+    });
+    const userIds = trialUsers.map((user) => user.user.clerkId);
+    const pushTokens = await prisma.pushNotificationToken.findMany({
+      where: {
+        userId: {
+          in: userIds,
+        },
+      },
+    });
+    const ids: string[] = [];
+    const tokens: string[] = [];
+    const prismaTransaction: any = [];
+
+    for (let token of pushTokens) {
+      const userId = token.userId;
+
+      if (!ids.includes(userId)) {
+        prismaTransaction.push({
+          userId: userId,
+          companyName: title,
+          message: body,
+          logo: "",
+          type: "push",
+        });
+        ids.push(userId);
+      }
+      tokens.push(token.token);
+    }
+    await prisma.notification.createMany({
+      data: prismaTransaction,
+      skipDuplicates: true,
+    });
+    await sendPushNotificationsInBatches(title, body, tokens);
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+}
+
+async function sendPushNotiToFreeUser(data: any) {
+  try {
+    const { title, body } = data;
+    const notFreeUsers = await prisma.activePlan.findMany({
+      where: {
+        expiresOn: { lt: new Date() },
+      },
+      select: {
+        user: {
+          select: {
+            clerkId: true,
+          },
+        },
+      },
+    });
+    const userIds = notFreeUsers.map((user) => user.user.clerkId);
+    const pushTokens = await prisma.pushNotificationToken.findMany({
+      where: {
+        userId: {
+          notIn: userIds,
+        },
+      },
+    });
     const ids: string[] = [];
     const tokens: string[] = [];
     const prismaTransaction: any = [];

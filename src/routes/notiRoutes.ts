@@ -5,6 +5,8 @@ import {
   addComment,
   giveReaction,
   getComments,
+  sendPushNotificationToTrialUser,
+  sendPushNotificationToFreeUser,
 } from "../controllers/notiController";
 
 const router = express.Router();
@@ -14,5 +16,7 @@ router.route("/send/analysis").post(sendAnalysis);
 router.route("/add/comment").post(addComment);
 router.route("/give/reaction").post(giveReaction);
 router.route("/get/comments/:analysisId").get(getComments);
+router.route("/send/push-to-trial-user").post(sendPushNotificationToTrialUser);
+router.route("/send/push-to-free-user").post(sendPushNotificationToFreeUser);
 
 export { router as notiRoutes };

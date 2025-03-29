@@ -11,16 +11,30 @@ datasource db {
 }
 
 model User {
-    id        String       @id @default(cuid())
-    clerkId   String       @unique
-    email     String       @unique
-    firstName String?
-    lastName  String?
-    image     String?
-    lastSeen  DateTime?
-    createdAt DateTime     @default(now())
-    plans     ActivePlan[]
-    orders    Order[]
+    id            String         @id @default(cuid())
+    clerkId       String         @unique
+    email         String         @unique
+    firstName     String?
+    lastName      String?
+    image         String?
+    lastSeen      DateTime?
+    createdAt     DateTime       @default(now())
+    plans         ActivePlan[]
+    orders        Order[]
+    goldenChoices GoldenChoice[]
+    sessions      Session[] // Relation to track sessions
+}
+
+model Session {
+    id        String   @id @default(cuid())
+    userId    String
+    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    deviceId  String
+    isExpired Boolean  @default(false)
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    @@unique([userId, deviceId])
 }
 
 // *********************
@@ -679,8 +693,10 @@ model PricingPlan {
     discount       Float?       @default(0)
     validity       Int          @default(30)
     pricePerDevice Float?       @default(0)
+    device         Int          @default(1)
     createdAt      DateTime     @default(now()) @map("created_at")
     updatedAt      DateTime     @updatedAt @map("updated_at")
+    isTrial        Boolean      @default(false)
     activePlan     ActivePlan[]
     orders         Order[]
 }
@@ -702,20 +718,37 @@ model ActivePlan {
     user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
     planId    String
     plan      PricingPlan @relation(fields: [planId], references: [id])
+    devices   Int         @default(1)
     expiresOn DateTime?
+    orderId   String?
     createdAt DateTime    @default(now()) @map("created_at")
     updatedAt DateTime    @updatedAt @map("updated_at")
 }
 
-model Order {
-    id        String      @id @default(cuid())
+model GoldenChoice {
+    id        String   @id @default(cuid())
     userId    String
-    user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-    planId    String
-    plan      PricingPlan @relation(fields: [planId], references: [id])
-    coupon    Json?
-    total     Float
-    paid      Boolean     @default(false)
-    createdAt DateTime    @default(now()) @map("created_at")
-    updatedAt DateTime    @updatedAt @map("updated_at")
+    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    symbols   String[]
+    answer    String
+    isPremium Boolean  @default(false)
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+}
+
+model Order {
+    id           String      @id @default(cuid())
+    userId       String
+    user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+    planId       String
+    plan         PricingPlan @relation(fields: [planId], references: [id])
+    coupon       Json?
+    total        Float
+    paid         Boolean     @default(false)
+    extraDevices Int         @default(0)
+    deviceId     String?
+    expiresOn    DateTime?
+    startedOn    DateTime?
+    createdAt    DateTime    @default(now()) @map("created_at")
+    updatedAt    DateTime    @updatedAt @map("updated_at")
 }
