@@ -4,6 +4,7 @@ import { BadRequestError, UnAuthenticatedError } from "@/src/errors";
 import { StatusCodes } from "http-status-codes";
 import fetch from "node-fetch";
 import { JSDOM } from "jsdom";
+import { redis } from "@/src/lib/redis";
 
 const indexTvJp = async (req: any, res: Response) => {
   try {
@@ -912,6 +913,17 @@ const amarstockAllMarket = async (req: any, res: Response) => {
       }
     }
     console.log("Done");
+    const newData = await prisma.market.findMany({
+      where: {
+        country: "BD",
+      },
+    });
+    await redis.set(
+      `key::market::bd`,
+      JSON.stringify(newData),
+      "EX",
+      60 * 60 * 24 * 30
+    );
     res.status(StatusCodes.OK).json({ success: true });
   } catch (error: any) {
     console.log(error);

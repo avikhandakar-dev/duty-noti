@@ -208,13 +208,23 @@ model Notification {
     entityId        String?
     title           String?
     message         String
-    userId          String
+    userId          String?
     country         String   @default("BD")
     companyName     String?
     logo            String?
     requiredPremium Boolean  @default(false)
     createdAt       DateTime @default(now()) @map("created_at")
     updatedAt       DateTime @updatedAt @map("updated_at")
+}
+
+model SeenBy {
+    id             String   @id @default(cuid())
+    notificationId String
+    userId         String
+    createdAt      DateTime @default(now()) @map("created_at")
+    updatedAt      DateTime @updatedAt @map("updated_at")
+
+    @@unique([notificationId, userId])
 }
 
 model AiNotification {
