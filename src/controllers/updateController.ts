@@ -4,7 +4,7 @@ import { BadRequestError, UnAuthenticatedError } from "@/src/errors";
 import { StatusCodes } from "http-status-codes";
 import fetch from "node-fetch";
 import { JSDOM } from "jsdom";
-import { redis } from "@/src/lib/redis";
+import { redisCache } from "@/src/lib/redis";
 
 const indexTvJp = async (req: any, res: Response) => {
   try {
@@ -918,7 +918,7 @@ const amarstockAllMarket = async (req: any, res: Response) => {
         country: "BD",
       },
     });
-    await redis.set(
+    await redisCache.set(
       `key::market::bd`,
       JSON.stringify(newData),
       "EX",
