@@ -11,18 +11,43 @@ datasource db {
 }
 
 model User {
-    id            String         @id @default(cuid())
-    clerkId       String         @unique
-    email         String         @unique
-    firstName     String?
-    lastName      String?
-    image         String?
-    lastSeen      DateTime?
-    createdAt     DateTime       @default(now())
-    plans         ActivePlan[]
-    orders        Order[]
-    goldenChoices GoldenChoice[]
-    sessions      Session[] // Relation to track sessions
+    id                     String                  @id @default(cuid())
+    clerkId                String                  @unique
+    email                  String                  @unique
+    firstName              String?
+    lastName               String?
+    image                  String?
+    lastSeen               DateTime?
+    createdAt              DateTime                @default(now())
+    plans                  ActivePlan[]
+    orders                 Order[]
+    goldenChoices          GoldenChoice[]
+    sessions               Session[] // Relation to track sessions
+    notificationPreference NotificationPreference?
+    pushTokens             PushNotificationToken[]
+}
+
+model PushNotificationToken {
+    id        String   @id @default(cuid())
+    token     String   @unique
+    user      User?    @relation(fields: [uId], references: [clerkId], onDelete: Cascade)
+    uId       String?
+    userId    String
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+}
+
+model NotificationPreference {
+    id                           String   @id @default(cuid())
+    userId                       String   @unique
+    user                         User     @relation(fields: [userId], references: [clerkId], onDelete: Cascade)
+    enableShortNotifications     Boolean  @default(true)
+    enableFullNotifications      Boolean  @default(true)
+    enableAiNotifications        Boolean  @default(true)
+    enablePriceNotifications     Boolean  @default(true)
+    enablePortfolioNotifications Boolean  @default(true)
+    createdAt                    DateTime @default(now()) @map("created_at")
+    updatedAt                    DateTime @updatedAt @map("updated_at")
 }
 
 model Session {
@@ -132,17 +157,6 @@ model Support {
     userId    String
     reply     String?
     image     String?
-    createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime @updatedAt @map("updated_at")
-}
-
-// *********************
-// Push
-// *********************
-model PushNotificationToken {
-    id        String   @id @default(cuid())
-    token     String   @unique
-    userId    String
     createdAt DateTime @default(now()) @map("created_at")
     updatedAt DateTime @updatedAt @map("updated_at")
 }
@@ -267,6 +281,9 @@ model AnalysisComment {
     createdAt  DateTime               @default(now()) @map("created_at")
     updatedAt  DateTime               @updatedAt @map("updated_at")
     reacts     AnalysisCommentReact[]
+    parent     AnalysisComment?       @relation("ParentChild", fields: [parentId], references: [id], onDelete: Cascade)
+    parentId   String?
+    children   AnalysisComment[]      @relation("ParentChild")
 }
 
 model AnalysisReact {
@@ -723,16 +740,17 @@ model Coupon {
 }
 
 model ActivePlan {
-    id        String      @id @default(cuid())
-    userId    String
-    user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-    planId    String
-    plan      PricingPlan @relation(fields: [planId], references: [id])
-    devices   Int         @default(1)
-    expiresOn DateTime?
-    orderId   String?
-    createdAt DateTime    @default(now()) @map("created_at")
-    updatedAt DateTime    @updatedAt @map("updated_at")
+    id         String      @id @default(cuid())
+    userId     String
+    user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+    planId     String
+    plan       PricingPlan @relation(fields: [planId], references: [id])
+    devices    Int         @default(1)
+    expiresOn  DateTime?
+    orderId    String?
+    alertCount Int         @default(0)
+    createdAt  DateTime    @default(now()) @map("created_at")
+    updatedAt  DateTime    @updatedAt @map("updated_at")
 }
 
 model GoldenChoice {

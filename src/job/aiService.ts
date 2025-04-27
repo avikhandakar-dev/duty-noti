@@ -11,10 +11,114 @@ const addToAIQueue = (operationType: string) => {
       return sendPushNotiToTrialUser;
     case "SEND-PUSH-NOTIFICATION-TO-FREE-USER":
       return sendPushNotiToFreeUser;
+    case "SEND-PUSH-NOTIFICATION-COMMENT":
+      return sendPushNotiComment;
+    case "SEND-PUSH-NOTIFICATION-REACTION":
+      return sendPushNotiReaction;
     default:
       throw new Error("Invalid operation type");
   }
 };
+
+async function sendPushNotiComment(data: any) {
+  try {
+    const { userId, analysisId, parentId, logo } = data;
+    const author = await prisma.user.findUnique({
+      where: {
+        clerkId: userId,
+      },
+    });
+    const targetComment = await prisma.analysisComment.findUnique({
+      where: {
+        id: parentId,
+      },
+    });
+    const targetUser = await prisma.user.findUnique({
+      where: {
+        clerkId: targetComment?.userId,
+      },
+      include: {
+        pushTokens: true,
+      },
+    });
+    if (!targetUser) {
+      return;
+    }
+    if (targetUser.id == author?.id) {
+      console.log("Same user");
+      return;
+    }
+    const pushTokens = targetUser?.pushTokens || [];
+    const tokens: string[] = pushTokens.map((token) => token.token);
+
+    const title = `${author?.firstName} commented on your post`;
+    const body = `${targetComment?.text}`;
+
+    await prisma.notification.create({
+      data: {
+        userId: userId,
+        companyName: title,
+        message: body,
+        logo: logo || "",
+        type: "analysis",
+        entityId: analysisId,
+      },
+    });
+    await sendPushNotificationsInBatches(title, body, tokens);
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+}
+
+async function sendPushNotiReaction(data: any) {
+  try {
+    const { userId, commentId, reaction, logo } = data;
+    const author = await prisma.user.findUnique({
+      where: {
+        clerkId: userId,
+      },
+    });
+    const targetComment = await prisma.analysisComment.findUnique({
+      where: {
+        id: commentId,
+      },
+    });
+    const targetUser = await prisma.user.findUnique({
+      where: {
+        clerkId: targetComment?.userId,
+      },
+      include: {
+        pushTokens: true,
+      },
+    });
+    if (!targetUser) {
+      return;
+    }
+    if (targetUser.id == author?.id) {
+      console.log("Same user");
+      return;
+    }
+    const pushTokens = targetUser?.pushTokens || [];
+    const tokens: string[] = pushTokens.map((token) => token.token);
+
+    const title = `${author?.firstName} ${author?.lastName} আপনার মন্তব্যটি পছন্দ করেছেন`;
+    const body = `আপনার মন্তব্যটি প্রশংসিত হয়েছে! 🌟 আরও দারুণ মন্তব্য করুন এবং বিনিয়োগকারীদের সঙ্গে সংযোগ গড়ে তুলুন।`;
+
+    await prisma.notification.create({
+      data: {
+        userId: userId,
+        companyName: title,
+        message: body,
+        logo: logo || "",
+        type: "analysis",
+        entityId: targetComment?.analysisId,
+      },
+    });
+    await sendPushNotificationsInBatches(title, body, tokens);
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+}
 
 export async function sendPushNotificationsInBatches(
   title: string,
@@ -56,7 +160,15 @@ export async function sendPushNotificationsInBatches(
 async function sendPushNoti(data: any) {
   try {
     const { title, body } = data;
-    const pushTokens = await prisma.pushNotificationToken.findMany();
+    const pushTokens = await prisma.pushNotificationToken.findMany({
+      where: {
+        user: {
+          notificationPreference: {
+            enableShortNotifications: true,
+          },
+        },
+      },
+    });
     const ids: string[] = [];
     const tokens: string[] = [];
     const prismaTransaction: any = [];
@@ -94,6 +206,11 @@ async function sendPushNotiToTrialUser(data: any) {
         expiresOn: { gt: new Date() },
         plan: {
           isTrial: true,
+        },
+        user: {
+          notificationPreference: {
+            enableShortNotifications: true,
+          },
         },
       },
       select: {
@@ -162,6 +279,11 @@ async function sendPushNotiToFreeUser(data: any) {
         userId: {
           notIn: userIds,
         },
+        user: {
+          notificationPreference: {
+            enableShortNotifications: true,
+          },
+        },
       },
     });
     const ids: string[] = [];
@@ -196,7 +318,15 @@ async function sendPushNotiToFreeUser(data: any) {
 async function sendPushNotiAnalysis(data: any) {
   try {
     const { title, message, companyName, analysisId, requiredPremium } = data;
-    const pushTokens = await prisma.pushNotificationToken.findMany();
+    const pushTokens = await prisma.pushNotificationToken.findMany({
+      where: {
+        user: {
+          notificationPreference: {
+            enableFullNotifications: true,
+          },
+        },
+      },
+    });
     const ids: string[] = [];
     const tokens: string[] = [];
     const prismaTransaction: any = [];

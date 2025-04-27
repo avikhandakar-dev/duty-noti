@@ -11,10 +11,17 @@ const sendSchema = z.object({
   body: z.string(),
 });
 
-const commentReactionSchema = z.object({
+const postReactionSchema = z.object({
   reaction: z.nativeEnum(Reaction),
   analysisId: z.string(),
   userId: z.string(),
+});
+
+const commentReactionSchema = z.object({
+  reaction: z.nativeEnum(Reaction),
+  commentId: z.string(),
+  userId: z.string(),
+  logo: z.string().optional().nullish().default(""),
 });
 
 const commentSchema = z.object({
@@ -22,6 +29,8 @@ const commentSchema = z.object({
   userId: z.string(),
   text: z.string(),
   analysisId: z.string(),
+  parentId: z.string().optional(),
+  logo: z.string().optional().nullish().default(""),
 });
 
 const sendAnalysisSchema = z.object({
@@ -137,15 +146,27 @@ const sendAnalysis = async (req: any, res: Response) => {
 
 const addComment = async (req: any, res: Response) => {
   try {
-    const { user, userId, text, analysisId } = commentSchema.parse(req.body);
+    const { user, userId, text, analysisId, parentId } = commentSchema.parse(
+      req.body
+    );
     const comment = await prisma.analysisComment.create({
       data: {
         user,
         userId,
         text,
         analysisId,
+        ...(parentId && { parentId }),
       },
     });
+    if (parentId) {
+      await aiQueue.add(`send-push-notification-comment`, {
+        userId,
+        analysisId,
+        parentId,
+        logo: user?.profilePhoto,
+        queueType: "SEND-PUSH-NOTIFICATION-COMMENT",
+      });
+    }
     res.status(StatusCodes.OK).json({ comment });
   } catch (error: any) {
     console.log(error);
@@ -155,9 +176,7 @@ const addComment = async (req: any, res: Response) => {
 
 const giveReaction = async (req: any, res: Response) => {
   try {
-    const { reaction, analysisId, userId } = commentReactionSchema.parse(
-      req.body
-    );
+    const { reaction, analysisId, userId } = postReactionSchema.parse(req.body);
     const analysisReact = await prisma.analysisReact.findFirst({
       where: {
         analysisId,
@@ -189,23 +208,135 @@ const giveReaction = async (req: any, res: Response) => {
   }
 };
 
-const getComments = async (req: any, res: Response) => {
+const giveReactionToComment = async (req: any, res: Response) => {
   try {
-    const { analysisId } = req.params;
-    const comments = await prisma.analysisComment.findMany({
+    const { reaction, commentId, userId, logo } = commentReactionSchema.parse(
+      req.body
+    );
+    const commentReact = await prisma.analysisCommentReact.findFirst({
       where: {
-        analysisId,
-      },
-      orderBy: {
-        createdAt: "desc",
+        commentId,
+        userId,
       },
     });
-    res.status(StatusCodes.OK).json({ comments });
+    if (commentReact) {
+      await prisma.analysisCommentReact.deleteMany({
+        where: {
+          commentId,
+          userId,
+        },
+      });
+    }
+
+    if (commentReact?.reaction !== reaction) {
+      await prisma.analysisCommentReact.create({
+        data: {
+          reaction,
+          commentId,
+          userId,
+        },
+      });
+    }
+    await aiQueue.add(`send-push-notification-reaction`, {
+      userId,
+      commentId,
+      reaction,
+      logo,
+      queueType: "SEND-PUSH-NOTIFICATION-REACTION",
+    });
+    res.status(StatusCodes.OK).json({ [reaction]: true });
   } catch (error: any) {
     console.log(error);
     throw new BadRequestError(error.message || "Something went wrong!");
   }
 };
+
+const getComments = async (req: any, res: Response) => {
+  try {
+    const { analysisId } = req.params;
+    const { page = 1, limit = 10 } = req.query;
+
+    const pageNum = parseInt(page as string, 10);
+    const limitNum = parseInt(limit as string, 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    // First, get only root level comments (those without parentId)
+    const rootComments = await prisma.analysisComment.findMany({
+      where: {
+        analysisId,
+        parentId: null, // Only root comments
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      skip,
+      take: limitNum,
+    });
+
+    // Then get all descendants for these root comments
+    const commentsWithReplies = await Promise.all(
+      rootComments.map(async (comment) => {
+        // Fetch all nested replies for this comment
+        const replies = await fetchNestedReplies(comment.id);
+        return {
+          ...comment,
+          children: replies,
+        };
+      })
+    );
+
+    // Get total count of root comments for pagination
+    const totalRootComments = await prisma.analysisComment.count({
+      where: {
+        analysisId,
+        parentId: null,
+      },
+    });
+
+    const totalPages = Math.ceil(totalRootComments / limitNum);
+
+    res.status(StatusCodes.OK).json({
+      comments: commentsWithReplies,
+      pagination: {
+        currentPage: pageNum,
+        totalPages,
+        totalItems: totalRootComments,
+        itemsPerPage: limitNum,
+        hasNextPage: pageNum < totalPages,
+        hasPreviousPage: pageNum > 1,
+      },
+    });
+  } catch (error: any) {
+    console.log(error);
+    throw new BadRequestError(error.message || "Something went wrong!");
+  }
+};
+
+// Helper function to recursively fetch all nested comments
+// Add explicit return type to fix the TypeScript error
+async function fetchNestedReplies(parentId: string): Promise<any[]> {
+  const replies = await prisma.analysisComment.findMany({
+    where: {
+      parentId,
+    },
+    orderBy: {
+      createdAt: "asc", // Show oldest comments first in replies
+    },
+  });
+
+  // Recursively get nested replies for each reply
+  const nestedReplies = await Promise.all(
+    replies.map(async (reply) => {
+      const children = await fetchNestedReplies(reply.id);
+      return {
+        ...reply,
+        children,
+      } as any;
+    })
+  );
+
+  return nestedReplies;
+}
 
 export {
   sendPushNotification,
@@ -215,4 +346,5 @@ export {
   getComments,
   sendPushNotificationToTrialUser,
   sendPushNotificationToFreeUser,
+  giveReactionToComment,
 };
