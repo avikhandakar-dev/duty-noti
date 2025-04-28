@@ -207,11 +207,11 @@ async function sendPushNotiToTrialUser(data: any) {
         plan: {
           isTrial: true,
         },
-        user: {
-          notificationPreference: {
-            enableShortNotifications: true,
-          },
-        },
+        // user: {
+        //   notificationPreference: {
+        //     enableShortNotifications: true,
+        //   },
+        // },
       },
       select: {
         user: {
@@ -279,11 +279,11 @@ async function sendPushNotiToFreeUser(data: any) {
         userId: {
           notIn: userIds,
         },
-        user: {
-          notificationPreference: {
-            enableShortNotifications: true,
-          },
-        },
+        // user: {
+        //   notificationPreference: {
+        //     enableShortNotifications: true,
+        //   },
+        // },
       },
     });
     const ids: string[] = [];
@@ -320,11 +320,11 @@ async function sendPushNotiAnalysis(data: any) {
     const { title, message, companyName, analysisId, requiredPremium } = data;
     const pushTokens = await prisma.pushNotificationToken.findMany({
       where: {
-        user: {
-          notificationPreference: {
-            enableFullNotifications: true,
-          },
-        },
+        // user: {
+        //   notificationPreference: {
+        //     enableFullNotifications: true,
+        //   },
+        // },
       },
     });
     const ids: string[] = [];
