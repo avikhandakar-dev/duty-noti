@@ -161,13 +161,13 @@ async function sendPushNoti(data: any) {
   try {
     const { title, body } = data;
     const pushTokens = await prisma.pushNotificationToken.findMany({
-      where: {
-        user: {
-          notificationPreference: {
-            enableShortNotifications: true,
-          },
-        },
-      },
+      // where: {
+      //   user: {
+      //     notificationPreference: {
+      //       enableShortNotifications: true,
+      //     },
+      //   },
+      // },
     });
     const ids: string[] = [];
     const tokens: string[] = [];
