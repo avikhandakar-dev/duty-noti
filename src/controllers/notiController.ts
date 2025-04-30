@@ -254,7 +254,7 @@ const giveReactionToComment = async (req: any, res: Response) => {
 const getComments = async (req: any, res: Response) => {
   try {
     const { analysisId } = req.params;
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 10, userId } = req.query;
 
     const pageNum = parseInt(page as string, 10);
     const limitNum = parseInt(limit as string, 10);
@@ -275,6 +275,14 @@ const getComments = async (req: any, res: Response) => {
             reacts: true, // Count reactions for each comment
           },
         },
+        reacts: userId
+          ? {
+              where: {
+                userId: userId as string,
+                reaction: "Like",
+              },
+            }
+          : false,
       },
       skip,
       take: limitNum,
@@ -284,11 +292,16 @@ const getComments = async (req: any, res: Response) => {
     const commentsWithReplies = await Promise.all(
       rootComments.map(async (comment) => {
         // Fetch all nested replies for this comment
-        const replies = await fetchNestedReplies(comment.id);
+        const replies = await fetchNestedReplies(
+          comment.id,
+          userId as string | undefined
+        );
         return {
           ...comment,
           children: replies,
           likesCount: comment._count.reacts,
+          likedByMe: userId ? comment.reacts.length > 0 : false,
+          reacts: undefined, // Remove the reacts array from the response
         };
       })
     );
@@ -322,7 +335,10 @@ const getComments = async (req: any, res: Response) => {
 
 // Helper function to recursively fetch all nested comments
 // Add explicit return type to fix the TypeScript error
-async function fetchNestedReplies(parentId: string): Promise<any[]> {
+async function fetchNestedReplies(
+  parentId: string,
+  userId?: string
+): Promise<any[]> {
   const replies = await prisma.analysisComment.findMany({
     where: {
       parentId,
@@ -336,17 +352,27 @@ async function fetchNestedReplies(parentId: string): Promise<any[]> {
           reacts: true, // Count reactions for each reply
         },
       },
+      reacts: userId
+        ? {
+            where: {
+              userId: userId,
+              reaction: "Like",
+            },
+          }
+        : false,
     },
   });
 
   // Recursively get nested replies for each reply
   const nestedReplies = await Promise.all(
     replies.map(async (reply) => {
-      const children = await fetchNestedReplies(reply.id);
+      const children = await fetchNestedReplies(reply.id, userId);
       return {
         ...reply,
         children,
         likesCount: reply._count.reacts,
+        likedByMe: userId ? reply.reacts.length > 0 : false,
+        reacts: undefined, // Remove the reacts array from the response
       } as any;
     })
   );
