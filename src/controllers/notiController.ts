@@ -269,6 +269,13 @@ const getComments = async (req: any, res: Response) => {
       orderBy: {
         createdAt: "desc",
       },
+      include: {
+        _count: {
+          select: {
+            reacts: true, // Count reactions for each comment
+          },
+        },
+      },
       skip,
       take: limitNum,
     });
@@ -281,6 +288,7 @@ const getComments = async (req: any, res: Response) => {
         return {
           ...comment,
           children: replies,
+          likesCount: comment._count.reacts,
         };
       })
     );
@@ -322,6 +330,13 @@ async function fetchNestedReplies(parentId: string): Promise<any[]> {
     orderBy: {
       createdAt: "asc", // Show oldest comments first in replies
     },
+    include: {
+      _count: {
+        select: {
+          reacts: true, // Count reactions for each reply
+        },
+      },
+    },
   });
 
   // Recursively get nested replies for each reply
@@ -331,6 +346,7 @@ async function fetchNestedReplies(parentId: string): Promise<any[]> {
       return {
         ...reply,
         children,
+        likesCount: reply._count.reacts,
       } as any;
     })
   );
