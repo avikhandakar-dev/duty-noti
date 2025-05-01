@@ -37,9 +37,6 @@ async function sendPushNotiComment(data: any) {
       where: {
         clerkId: targetComment?.userId,
       },
-      include: {
-        pushTokens: true,
-      },
     });
     if (!targetUser) {
       return;
@@ -48,7 +45,11 @@ async function sendPushNotiComment(data: any) {
       console.log("Same user");
       return;
     }
-    const pushTokens = targetUser?.pushTokens || [];
+    const pushTokens = await prisma.pushNotificationToken.findMany({
+      where: {
+        userId: targetUser.clerkId,
+      },
+    });
     const tokens: string[] = pushTokens.map((token) => token.token);
 
     const title = `${author?.firstName} commented on your post`;
@@ -87,9 +88,6 @@ async function sendPushNotiReaction(data: any) {
       where: {
         clerkId: targetComment?.userId,
       },
-      include: {
-        pushTokens: true,
-      },
     });
     if (!targetUser) {
       return;
@@ -98,7 +96,11 @@ async function sendPushNotiReaction(data: any) {
       console.log("Same user");
       return;
     }
-    const pushTokens = targetUser?.pushTokens || [];
+    const pushTokens = await prisma.pushNotificationToken.findMany({
+      where: {
+        userId: targetUser.clerkId,
+      },
+    });
     const tokens: string[] = pushTokens.map((token) => token.token);
 
     const title = `${author?.firstName} ${author?.lastName} আপনার মন্তব্যটি পছন্দ করেছেন`;
