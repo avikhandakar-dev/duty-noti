@@ -56,7 +56,7 @@ async function sendPushNotiComment(data: any) {
 
     await prisma.notification.create({
       data: {
-        userId: userId,
+        userId: targetUser.clerkId,
         companyName: title,
         message: body,
         logo: logo || "",
@@ -106,7 +106,7 @@ async function sendPushNotiReaction(data: any) {
 
     await prisma.notification.create({
       data: {
-        userId: userId,
+        userId: targetUser.clerkId,
         companyName: title,
         message: body,
         logo: logo || "",
