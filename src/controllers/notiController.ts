@@ -237,13 +237,15 @@ const giveReactionToComment = async (req: any, res: Response) => {
         },
       });
     }
-    await aiQueue.add(`send-push-notification-reaction`, {
-      userId,
-      commentId,
-      reaction,
-      logo,
-      queueType: "SEND-PUSH-NOTIFICATION-REACTION",
-    });
+    if (!commentReact) {
+      await aiQueue.add(`send-push-notification-reaction`, {
+        userId,
+        commentId,
+        reaction,
+        logo,
+        queueType: "SEND-PUSH-NOTIFICATION-REACTION",
+      });
+    }
     res.status(StatusCodes.OK).json({ [reaction]: true });
   } catch (error: any) {
     console.log(error);
