@@ -57,6 +57,9 @@ const triggerCron = async () => {
     const title = await chatCompletion(titlePrompt);
     const body = await chatCompletion(bodyPrompt);
 
+    console.log("title: ", title);
+    console.log("body: ", body);
+
     await sendPushNotificationsInBatches(
       title || "Plan End",
       body || "Your plan has ended!",

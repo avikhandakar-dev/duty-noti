@@ -19,6 +19,7 @@ import { updateRoutes } from "./routes/updateRoutes";
 import { startNoPortfolioScheduler } from "./cron/noPortfolio";
 import { startNoHoldingsTodayScheduler } from "./cron/noHoldingsToday";
 import { startHasHoldingsScheduler } from "./cron/hasHoldings";
+import { startPlanEndScheduler } from "./cron/planEnd";
 
 const app = express();
 const httpServer = createServer(app);
@@ -49,6 +50,7 @@ app.use("/update", updateRoutes);
 startNoPortfolioScheduler();
 startNoHoldingsTodayScheduler();
 startHasHoldingsScheduler();
+startPlanEndScheduler();
 app.use(errorHandlerMiddleware);
 app.use(notFoundMiddleware);
 
