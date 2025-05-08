@@ -48,6 +48,11 @@ async function sendPushNotiComment(data: any) {
     const pushTokens = await prisma.pushNotificationToken.findMany({
       where: {
         userId: targetUser.clerkId,
+        user: {
+          notificationPreference: {
+            enableShortNotifications: true,
+          },
+        },
       },
     });
     const tokens: string[] = pushTokens.map((token) => token.token);
@@ -99,6 +104,11 @@ async function sendPushNotiReaction(data: any) {
     const pushTokens = await prisma.pushNotificationToken.findMany({
       where: {
         userId: targetUser.clerkId,
+        user: {
+          notificationPreference: {
+            enableShortNotifications: true,
+          },
+        },
       },
     });
     const tokens: string[] = pushTokens.map((token) => token.token);
@@ -163,13 +173,22 @@ async function sendPushNoti(data: any) {
   try {
     const { title, body } = data;
     const pushTokens = await prisma.pushNotificationToken.findMany({
-      // where: {
-      //   user: {
-      //     notificationPreference: {
-      //       enableShortNotifications: true,
-      //     },
-      //   },
-      // },
+      where: {
+        OR: [
+          {
+            user: {
+              notificationPreference: {
+                enableShortNotifications: true,
+              },
+            },
+          },
+          {
+            user: {
+              notificationPreference: null,
+            },
+          },
+        ],
+      },
     });
     const ids: string[] = [];
     const tokens: string[] = [];
@@ -322,11 +341,20 @@ async function sendPushNotiAnalysis(data: any) {
     const { title, message, companyName, analysisId, requiredPremium } = data;
     const pushTokens = await prisma.pushNotificationToken.findMany({
       where: {
-        // user: {
-        //   notificationPreference: {
-        //     enableFullNotifications: true,
-        //   },
-        // },
+        OR: [
+          {
+            user: {
+              notificationPreference: {
+                enableFullNotifications: true,
+              },
+            },
+          },
+          {
+            user: {
+              notificationPreference: null,
+            },
+          },
+        ],
       },
     });
     const ids: string[] = [];
