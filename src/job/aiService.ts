@@ -50,7 +50,7 @@ async function sendPushNotiComment(data: any) {
         userId: targetUser.clerkId,
         user: {
           notificationPreference: {
-            enableShortNotifications: true,
+            enableFullNotifications: true,
           },
         },
       },
@@ -106,7 +106,7 @@ async function sendPushNotiReaction(data: any) {
         userId: targetUser.clerkId,
         user: {
           notificationPreference: {
-            enableShortNotifications: true,
+            enableFullNotifications: true,
           },
         },
       },
