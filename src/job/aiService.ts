@@ -131,6 +131,9 @@ async function sendPushNotiReaction(data: any) {
         token.user?.notificationPreference.enableFullNotifications
     );
 
+    console.log("filteredTokens", filteredTokens);
+    console.log(pushTokens, "pushTokens");
+
     const tokens: string[] = filteredTokens.map((token) => token.token);
 
     const title = `${author?.firstName} ${author?.lastName} আপনার মন্তব্যটি পছন্দ করেছেন`;
