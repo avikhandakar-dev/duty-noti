@@ -48,11 +48,20 @@ async function sendPushNotiComment(data: any) {
     const pushTokens = await prisma.pushNotificationToken.findMany({
       where: {
         userId: targetUser.clerkId,
-        user: {
-          notificationPreference: {
-            enableFullNotifications: true,
+        OR: [
+          {
+            user: {
+              notificationPreference: {
+                enableFullNotifications: true,
+              },
+            },
           },
-        },
+          {
+            user: {
+              notificationPreference: null,
+            },
+          },
+        ],
       },
     });
     const tokens: string[] = pushTokens.map((token) => token.token);
@@ -104,11 +113,20 @@ async function sendPushNotiReaction(data: any) {
     const pushTokens = await prisma.pushNotificationToken.findMany({
       where: {
         userId: targetUser.clerkId,
-        user: {
-          notificationPreference: {
-            enableFullNotifications: true,
+        OR: [
+          {
+            user: {
+              notificationPreference: {
+                enableFullNotifications: true,
+              },
+            },
           },
-        },
+          {
+            user: {
+              notificationPreference: null,
+            },
+          },
+        ],
       },
     });
     const tokens: string[] = pushTokens.map((token) => token.token);
