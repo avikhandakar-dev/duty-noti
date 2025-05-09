@@ -102,6 +102,10 @@ async function sendPushNotiReaction(data: any) {
       where: {
         clerkId: targetComment?.userId,
       },
+      include: {
+        notificationPreference: true,
+        pushTokens: true,
+      },
     });
     if (!targetUser) {
       return;
@@ -110,35 +114,17 @@ async function sendPushNotiReaction(data: any) {
       console.log("Same user");
       return;
     }
-    // Fixed query for push tokens
-    const pushTokens = await prisma.pushNotificationToken.findMany({
-      where: {
-        userId: targetUser.clerkId,
-      },
-      include: {
-        user: {
-          include: {
-            notificationPreference: true,
-          },
-        },
-      },
-    });
 
-    // Improved filtering logic - if any token has preferences, use only tokens with enableFullNotifications=true
-    const hasPreferences = pushTokens.some(
-      (token) => token.user?.notificationPreference
-    );
+    if (targetUser.notificationPreference) {
+      if (targetUser.notificationPreference.enableFullNotifications == false) {
+        console.log("Notification disabled");
+        return;
+      }
+    }
 
-    const filteredTokens = hasPreferences
-      ? pushTokens.filter(
-          (token) => token.user?.notificationPreference?.enableFullNotifications
-        )
-      : pushTokens;
+    const pushTokens = targetUser.pushTokens;
 
-    console.log("filteredTokens", filteredTokens);
-    console.log(pushTokens, "pushTokens");
-
-    const tokens: string[] = filteredTokens.map((token) => token.token);
+    const tokens: string[] = pushTokens.map((token) => token.token);
 
     const title = `${author?.firstName} ${author?.lastName} আপনার মন্তব্যটি পছন্দ করেছেন`;
     const body = `আপনার মন্তব্যটি প্রশংসিত হয়েছে! 🌟 আরও দারুণ মন্তব্য করুন এবং বিনিয়োগকারীদের সঙ্গে সংযোগ গড়ে তুলুন।`;
