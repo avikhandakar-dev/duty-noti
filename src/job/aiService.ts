@@ -110,26 +110,28 @@ async function sendPushNotiReaction(data: any) {
       console.log("Same user");
       return;
     }
+    // Fixed query for push tokens
     const pushTokens = await prisma.pushNotificationToken.findMany({
       where: {
         userId: targetUser.clerkId,
-        OR: [
-          {
-            user: {
-              notificationPreference: {
-                enableFullNotifications: true,
-              },
-            },
+      },
+      include: {
+        user: {
+          include: {
+            notificationPreference: true,
           },
-          {
-            user: {
-              notificationPreference: null,
-            },
-          },
-        ],
+        },
       },
     });
-    const tokens: string[] = pushTokens.map((token) => token.token);
+
+    // Filter tokens based on notification preferences
+    const filteredTokens = pushTokens.filter(
+      (token) =>
+        !token.user?.notificationPreference ||
+        token.user?.notificationPreference.enableFullNotifications
+    );
+
+    const tokens: string[] = filteredTokens.map((token) => token.token);
 
     const title = `${author?.firstName} ${author?.lastName} আপনার মন্তব্যটি পছন্দ করেছেন`;
     const body = `আপনার মন্তব্যটি প্রশংসিত হয়েছে! 🌟 আরও দারুণ মন্তব্য করুন এবং বিনিয়োগকারীদের সঙ্গে সংযোগ গড়ে তুলুন।`;
