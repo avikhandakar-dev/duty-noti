@@ -124,12 +124,16 @@ async function sendPushNotiReaction(data: any) {
       },
     });
 
-    // Filter tokens based on notification preferences
-    const filteredTokens = pushTokens.filter(
-      (token) =>
-        !token.user?.notificationPreference ||
-        token.user?.notificationPreference.enableFullNotifications
+    // Improved filtering logic - if any token has preferences, use only tokens with enableFullNotifications=true
+    const hasPreferences = pushTokens.some(
+      (token) => token.user?.notificationPreference
     );
+
+    const filteredTokens = hasPreferences
+      ? pushTokens.filter(
+          (token) => token.user?.notificationPreference?.enableFullNotifications
+        )
+      : pushTokens;
 
     console.log("filteredTokens", filteredTokens);
     console.log(pushTokens, "pushTokens");
