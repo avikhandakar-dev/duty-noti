@@ -90,7 +90,7 @@ const triggerCron = async () => {
 };
 
 export function startPlanEndScheduler() {
-  cron.schedule("0 10 * * *", triggerCron, {
+  cron.schedule("30 18 * * *", triggerCron, {
     timezone: "Asia/Dhaka",
     // runOnInit: true,
   });
