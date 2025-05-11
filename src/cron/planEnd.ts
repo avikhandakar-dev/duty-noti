@@ -21,6 +21,9 @@ const triggerCron = async () => {
     );
     const plans = await prisma.activePlan.findMany({
       where: {
+        plan: {
+          isTrial: false,
+        },
         expiresOn: {
           gt: threeDaysAgo,
           lt: today,
@@ -36,7 +39,7 @@ const triggerCron = async () => {
     const pushTokens = await prisma.pushNotificationToken.findMany({
       where: {
         userId: {
-          notIn: userIds,
+          in: userIds,
         },
       },
       select: {
