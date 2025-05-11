@@ -203,24 +203,22 @@ async function sendPushNoti(data: any) {
         ],
       },
     });
-    const ids: string[] = [];
-    const tokens: string[] = [];
+    const tokens = pushTokens.map((token) => token.token);
     const prismaTransaction: any = [];
 
-    for (let token of pushTokens) {
-      const userId = token.userId;
-
-      if (!ids.includes(userId)) {
-        prismaTransaction.push({
-          userId: userId,
-          companyName: title,
-          message: body,
-          logo: "",
-          type: "push",
-        });
-        ids.push(userId);
-      }
-      tokens.push(token.token);
+    const users = await prisma.user.findMany({
+      select: {
+        clerkId: true,
+      },
+    });
+    for (let user of users) {
+      prismaTransaction.push({
+        userId: user.clerkId,
+        companyName: title,
+        message: body,
+        logo: "",
+        type: "push",
+      });
     }
     await prisma.notification.createMany({
       data: prismaTransaction,
