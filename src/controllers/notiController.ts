@@ -5,6 +5,7 @@ import { StatusCodes } from "http-status-codes";
 import { z } from "zod";
 import { aiQueue } from "../job/queue";
 import { Reaction } from "@prisma/client";
+import { classifyComment } from "../lib/ai.utils";
 
 const sendSchema = z.object({
   title: z.string(),
@@ -149,12 +150,15 @@ const addComment = async (req: any, res: Response) => {
     const { user, userId, text, analysisId, parentId } = commentSchema.parse(
       req.body
     );
+    const c = await classifyComment(text);
+    const shouldBePrivate = c?.toLowerCase().includes("negative");
     const comment = await prisma.analysisComment.create({
       data: {
         user,
         userId,
         text,
         analysisId,
+        isPrivate: shouldBePrivate,
         ...(parentId && { parentId }),
       },
     });
@@ -263,10 +267,15 @@ const getComments = async (req: any, res: Response) => {
     const skip = (pageNum - 1) * limitNum;
 
     // First, get only root level comments (those without parentId)
+    // Filter to include public comments or private comments that belong to the requesting user
     const rootComments = await prisma.analysisComment.findMany({
       where: {
         analysisId,
         parentId: null, // Only root comments
+        OR: [
+          { isPrivate: false }, // Public comments visible to all
+          { isPrivate: true, userId: userId as string }, // Private comments visible only to owner
+        ],
       },
       orderBy: {
         createdAt: "desc",
@@ -309,10 +318,15 @@ const getComments = async (req: any, res: Response) => {
     );
 
     // Get total count of root comments for pagination
+    // Only count comments that the user is allowed to see
     const totalRootComments = await prisma.analysisComment.count({
       where: {
         analysisId,
         parentId: null,
+        OR: [
+          { isPrivate: false },
+          { isPrivate: true, userId: userId as string },
+        ],
       },
     });
 
@@ -344,6 +358,10 @@ async function fetchNestedReplies(
   const replies = await prisma.analysisComment.findMany({
     where: {
       parentId,
+      OR: [
+        { isPrivate: false }, // Public comments visible to all
+        { isPrivate: true, userId: userId }, // Private comments visible only to owner
+      ],
     },
     orderBy: {
       createdAt: "asc", // Show oldest comments first in replies

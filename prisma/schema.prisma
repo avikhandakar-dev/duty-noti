@@ -278,6 +278,7 @@ model AnalysisComment {
     userId     String
     analysis   Analysis               @relation(fields: [analysisId], references: [id], onDelete: Cascade)
     analysisId String
+    isPrivate  Boolean                @default(false)
     text       String
     createdAt  DateTime               @default(now()) @map("created_at")
     updatedAt  DateTime               @updatedAt @map("updated_at")
