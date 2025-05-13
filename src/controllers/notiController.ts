@@ -267,25 +267,16 @@ const getComments = async (req: any, res: Response) => {
     const skip = (pageNum - 1) * limitNum;
 
     // First, get only root level comments (those without parentId)
-    // Build the where condition based on whether userId is provided
-    const whereCondition: any = {
-      analysisId,
-      parentId: null, // Only root comments
-    };
-
-    // Only apply privacy filtering if userId is provided
-    if (userId) {
-      whereCondition.OR = [
-        { isPrivate: false }, // Public comments visible to all
-        { isPrivate: true, userId: userId as string }, // Private comments visible only to owner
-      ];
-    } else {
-      // If no userId provided, only show public comments
-      whereCondition.isPrivate = false;
-    }
-
+    // Filter to include public comments or private comments that belong to the requesting user
     const rootComments = await prisma.analysisComment.findMany({
-      where: whereCondition,
+      where: {
+        analysisId,
+        parentId: null, // Only root comments
+        OR: [
+          { isPrivate: false }, // Public comments visible to all
+          { isPrivate: true, userId: userId as string }, // Private comments visible only to owner
+        ],
+      },
       orderBy: {
         createdAt: "desc",
       },
@@ -329,7 +320,14 @@ const getComments = async (req: any, res: Response) => {
     // Get total count of root comments for pagination
     // Only count comments that the user is allowed to see
     const totalRootComments = await prisma.analysisComment.count({
-      where: whereCondition,
+      where: {
+        analysisId,
+        parentId: null,
+        OR: [
+          { isPrivate: false },
+          { isPrivate: true, userId: userId as string },
+        ],
+      },
     });
 
     const totalPages = Math.ceil(totalRootComments / limitNum);
@@ -357,24 +355,14 @@ async function fetchNestedReplies(
   parentId: string,
   userId?: string
 ): Promise<any[]> {
-  // Build the where condition based on whether userId is provided
-  const whereCondition: any = {
-    parentId,
-  };
-
-  // Only apply privacy filtering if userId is provided
-  if (userId) {
-    whereCondition.OR = [
-      { isPrivate: false }, // Public comments visible to all
-      { isPrivate: true, userId: userId }, // Private comments visible only to owner
-    ];
-  } else {
-    // If no userId provided, only show public comments
-    whereCondition.isPrivate = false;
-  }
-
   const replies = await prisma.analysisComment.findMany({
-    where: whereCondition,
+    where: {
+      parentId,
+      OR: [
+        { isPrivate: false }, // Public comments visible to all
+        { isPrivate: true, userId: userId }, // Private comments visible only to owner
+      ],
+    },
     orderBy: {
       createdAt: "asc", // Show oldest comments first in replies
     },
