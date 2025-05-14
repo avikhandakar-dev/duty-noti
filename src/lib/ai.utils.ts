@@ -44,6 +44,12 @@ Do not mention anything that could harm the platform’s credibility or user con
 
 If a comment seems unclear or neutral, analyze its tone and context carefully. If there is any chance it might create doubt or negativity among users, do not accept it.
 
+Be especially careful of comments written in Banglish (mixed Bangla-English). Sometimes users use casual or sarcastic language that might look normal but carry a negative or mocking tone.
+
+For example: “vua analysis diso ajke,” “quiz e kono lav nai bhai,” “duty ai time maintain korte pare na” – these must all be rejected.
+
+Even if the language is informal or mixed, detect the emotional tone. If it spreads negativity, frustration, sarcasm, or disbelief, do not accept it.
+
 Always prioritize maintaining the platform's reputation and user confidence.
 
 Answer should be in one word. Classify the following comment as either "positive", "negative", or "neutral": ${comment}`;
