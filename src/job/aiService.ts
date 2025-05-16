@@ -204,25 +204,13 @@ async function sendPushNoti(data: any) {
       },
     });
     const tokens = pushTokens.map((token) => token.token);
-    const prismaTransaction: any = [];
-
-    const users = await prisma.user.findMany({
-      select: {
-        clerkId: true,
-      },
-    });
-    for (let user of users) {
-      prismaTransaction.push({
-        userId: user.clerkId,
+    await prisma.notification.create({
+      data: {
         companyName: title,
         message: body,
         logo: "",
         type: "push",
-      });
-    }
-    await prisma.notification.createMany({
-      data: prismaTransaction,
-      skipDuplicates: true,
+      },
     });
     await sendPushNotificationsInBatches(title, body, tokens);
   } catch (error: any) {
@@ -369,28 +357,15 @@ async function sendPushNotiAnalysis(data: any) {
       },
     });
     const tokens = pushTokens.map((token) => token.token);
-    const prismaTransaction: any = [];
-
-    const users = await prisma.user.findMany({
-      select: {
-        clerkId: true,
-      },
-    });
-
-    for (let user of users) {
-      prismaTransaction.push({
-        userId: user?.clerkId,
+    await prisma.notification.create({
+      data: {
         companyName,
         message,
         logo: "",
         type: "analysis",
         entityId: analysisId,
         requiredPremium,
-      });
-    }
-    await prisma.notification.createMany({
-      data: prismaTransaction,
-      skipDuplicates: true,
+      },
     });
     await sendPushNotificationsInBatches(title, message, tokens);
   } catch (error: any) {
