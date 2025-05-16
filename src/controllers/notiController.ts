@@ -400,6 +400,94 @@ async function fetchNestedReplies(
   return nestedReplies;
 }
 
+const updateReadStatus = async (req: any, res: Response) => {
+  try {
+    const { notificationId, userId } = req.body;
+    await prisma.readBy.upsert({
+      where: {
+        notificationId_userId: {
+          notificationId,
+          userId,
+        },
+      },
+      update: {
+        notificationId,
+        userId,
+      },
+      create: {
+        notificationId,
+        userId,
+      },
+    });
+    res.status(StatusCodes.OK).json({ success: true });
+  } catch (error: any) {
+    console.log(error);
+    throw new BadRequestError(error.message || "Something went wrong!");
+  }
+};
+
+const updateViewStatus = async (req: any, res: Response) => {
+  try {
+    const { notificationId, userId } = req.body;
+    await prisma.seenBy.upsert({
+      where: {
+        notificationId_userId: {
+          notificationId,
+          userId,
+        },
+      },
+      update: {
+        notificationId,
+        userId,
+      },
+      create: {
+        notificationId,
+        userId,
+      },
+    });
+    res.status(StatusCodes.OK).json({ success: true });
+  } catch (error: any) {
+    console.log(error);
+    throw new BadRequestError(error.message || "Something went wrong!");
+  }
+};
+
+const readAll = async (req: any, res: Response) => {
+  try {
+    const { userId } = req.body;
+    await prisma.user.update({
+      where: {
+        clerkId: userId,
+      },
+      data: {
+        lastReadAll: new Date(),
+      },
+    });
+    res.status(StatusCodes.OK).json({ success: true });
+  } catch (error: any) {
+    console.log(error);
+    throw new BadRequestError(error.message || "Something went wrong!");
+  }
+};
+
+const viewAll = async (req: any, res: Response) => {
+  try {
+    const { userId } = req.body;
+    await prisma.user.update({
+      where: {
+        clerkId: userId,
+      },
+      data: {
+        lastViewAll: new Date(),
+      },
+    });
+    res.status(StatusCodes.OK).json({ success: true });
+  } catch (error: any) {
+    console.log(error);
+    throw new BadRequestError(error.message || "Something went wrong!");
+  }
+};
+
 export {
   sendPushNotification,
   sendAnalysis,
@@ -409,4 +497,8 @@ export {
   sendPushNotificationToTrialUser,
   sendPushNotificationToFreeUser,
   giveReactionToComment,
+  updateReadStatus,
+  updateViewStatus,
+  readAll,
+  viewAll,
 };
