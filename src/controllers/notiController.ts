@@ -492,6 +492,16 @@ const getAll = async (req: any, res: Response) => {
   try {
     const { userId } = req.body;
     if (!userId) throw new BadRequestError("User id is required");
+    const user = await prisma.user.findUnique({
+      where: {
+        clerkId: userId,
+      },
+      select: {
+        lastReadAll: true,
+        lastViewAll: true,
+      },
+    });
+    if (!user) throw new BadRequestError("User not found");
     const page = parseInt(req.params.page as string, 10) || 1;
     const limit = 20;
     const skip = (page - 1) * limit;
@@ -506,13 +516,28 @@ const getAll = async (req: any, res: Response) => {
           },
         ],
       },
+      include: {
+        seenBy: {
+          where: {
+            userId: userId,
+          },
+        },
+      },
       skip,
       take: limit,
       orderBy: {
         createdAt: "desc",
       },
     });
-    res.status(StatusCodes.OK).json(notis);
+    res.status(StatusCodes.OK).json(
+      notis.map((n) => {
+        return {
+          ...n,
+          isViewed: n.seenBy.length > 0 || n.createdAt < user?.lastViewAll!,
+          isRead: n.createdAt < user?.lastReadAll!,
+        };
+      })
+    );
   } catch (error: any) {
     console.log(error);
     throw new BadRequestError(error.message || "Something went wrong!");
