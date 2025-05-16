@@ -488,6 +488,37 @@ const viewAll = async (req: any, res: Response) => {
   }
 };
 
+const getAll = async (req: any, res: Response) => {
+  try {
+    const { userId } = req.body;
+    if (!userId) throw new BadRequestError("User id is required");
+    const page = parseInt(req.params.page as string, 10) || 1;
+    const limit = 20;
+    const skip = (page - 1) * limit;
+    const notis = await prisma.notification.findMany({
+      where: {
+        OR: [
+          {
+            userId: userId,
+          },
+          {
+            userId: null,
+          },
+        ],
+      },
+      skip,
+      take: limit,
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+    res.status(StatusCodes.OK).json(notis);
+  } catch (error: any) {
+    console.log(error);
+    throw new BadRequestError(error.message || "Something went wrong!");
+  }
+};
+
 export {
   sendPushNotification,
   sendAnalysis,
@@ -501,4 +532,5 @@ export {
   updateViewStatus,
   readAll,
   viewAll,
+  getAll,
 };

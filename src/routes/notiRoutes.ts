@@ -12,6 +12,7 @@ import {
   updateViewStatus,
   readAll,
   viewAll,
+  getAll,
 } from "../controllers/notiController";
 
 const router = express.Router();
@@ -28,5 +29,6 @@ router.route("/update-read-status").post(updateReadStatus);
 router.route("/update-view-status").post(updateViewStatus);
 router.route("/read-all").post(readAll);
 router.route("/view-all").post(viewAll);
+router.route("/get-all/:page").post(getAll);
 
 export { router as notiRoutes };
