@@ -14,6 +14,7 @@ import {
   viewAll,
   getAll,
   getUnreadCount,
+  getAnalysis,
 } from "../controllers/notiController";
 
 const router = express.Router();
@@ -32,5 +33,6 @@ router.route("/read-all").post(readAll);
 router.route("/view-all").post(viewAll);
 router.route("/get-all/:page").post(getAll);
 router.route("/get-unread-count").post(getUnreadCount);
+router.route("/get-analysis/:id").post(getAnalysis);
 
 export { router as notiRoutes };

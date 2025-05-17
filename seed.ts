@@ -1,11 +1,19 @@
 import prisma from "@/src/lib/prisma";
 import { classifyComment } from "./src/lib/ai.utils";
+import { subDays } from "date-fns";
 
 const main = async () => {
-  //all notifications that created within the last 30 minutes
-  const comment = "fuck you";
-  const classify = await classifyComment(comment);
-  console.log(classify);
+  const cutoffDate = subDays(new Date(), 14);
+
+  const deleted = await prisma.notification.deleteMany({
+    where: {
+      createdAt: {
+        lt: cutoffDate,
+      },
+    },
+  });
+
+  console.log(`${deleted.count} old notifications deleted.`);
 };
 
 main();

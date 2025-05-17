@@ -6,6 +6,7 @@ import { z } from "zod";
 import { aiQueue } from "../job/queue";
 import { Reaction } from "@prisma/client";
 import { classifyComment } from "../lib/ai.utils";
+import { redisCache } from "../lib/redis";
 
 const sendSchema = z.object({
   title: z.string(),
@@ -580,6 +581,94 @@ const getAll = async (req: any, res: Response) => {
   }
 };
 
+const getAnalysis = async (req: any, res: Response) => {
+  try {
+    const { userId } = req.body;
+    const { id } = req.params;
+    if (!userId) throw new BadRequestError("User id is required");
+    let analysis = null;
+    let cachedValue = await redisCache.get(`analysis::${id}`);
+    if (cachedValue) {
+      analysis = JSON.parse(cachedValue);
+    } else {
+      analysis = await prisma.analysis.findUnique({
+        where: {
+          id: id,
+        },
+      });
+      if (analysis) {
+        await redisCache.set(
+          `analysis::${id}`,
+          JSON.stringify(analysis),
+          "EX",
+          60 * 60 * 24 * 30
+        );
+      }
+    }
+    const t1 = prisma.analysisComment.count({
+      where: {
+        analysisId: id,
+      },
+    });
+    const t2 = prisma.analysisReact.count({
+      where: {
+        analysisId: id,
+      },
+    });
+    const t3 = prisma.analysisReact.count({
+      where: {
+        analysisId: id,
+        reaction: "Like",
+      },
+    });
+    const t4 = prisma.analysisReact.count({
+      where: {
+        analysisId: id,
+        reaction: "Dislike",
+      },
+    });
+
+    const t5 = prisma.analysisReact.findFirst({
+      where: {
+        analysisId: id,
+        userId: userId,
+        reaction: "Like",
+      },
+    });
+
+    const t6 = prisma.analysisReact.findFirst({
+      where: {
+        analysisId: id,
+        userId: userId,
+        reaction: "Dislike",
+      },
+    });
+
+    const result = await prisma.$transaction([t1, t2, t3, t4, t5, t6]);
+    const [
+      totalComments,
+      totalReactions,
+      totalLikes,
+      totalDislikes,
+      likedByMe,
+      dislikedByMe,
+    ] = result;
+
+    res.status(StatusCodes.OK).json({
+      analysis,
+      totalComments,
+      totalReactions,
+      totalLikes,
+      totalDislikes,
+      likedByMe: likedByMe !== null,
+      dislikedByMe: dislikedByMe !== null,
+    });
+  } catch (error: any) {
+    console.log(error);
+    throw new BadRequestError(error.message || "Something went wrong!");
+  }
+};
+
 export {
   sendPushNotification,
   sendAnalysis,
@@ -595,4 +684,5 @@ export {
   viewAll,
   getAll,
   getUnreadCount,
+  getAnalysis,
 };
