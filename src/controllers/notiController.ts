@@ -488,6 +488,42 @@ const viewAll = async (req: any, res: Response) => {
   }
 };
 
+const getUnreadCount = async (req: any, res: Response) => {
+  try {
+    const { userId } = req.body;
+    if (!userId) throw new BadRequestError("User id is required");
+    const user = await prisma.user.findUnique({
+      where: {
+        clerkId: userId,
+      },
+      select: {
+        lastReadAll: true,
+        lastViewAll: true,
+      },
+    });
+    if (!user) throw new BadRequestError("User not found");
+    const unreadCount = await prisma.notification.count({
+      where: {
+        createdAt: {
+          gt: user.lastReadAll,
+        },
+        OR: [
+          {
+            userId: userId,
+          },
+          {
+            userId: null,
+          },
+        ],
+      },
+    });
+    res.status(StatusCodes.OK).json({ count: unreadCount });
+  } catch (error: any) {
+    console.log(error);
+    throw new BadRequestError(error.message || "Something went wrong!");
+  }
+};
+
 const getAll = async (req: any, res: Response) => {
   try {
     const { userId } = req.body;
@@ -558,4 +594,5 @@ export {
   readAll,
   viewAll,
   getAll,
+  getUnreadCount,
 };
