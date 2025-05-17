@@ -130,6 +130,12 @@ const sendAnalysis = async (req: any, res: Response) => {
         requiredPremium,
       },
     });
+    await redisCache.set(
+      `analysis::${analysis.id}`,
+      JSON.stringify(analysis),
+      "EX",
+      60 * 60 * 24 * 30
+    );
     await aiQueue.add(`send-push-notification-analysis`, {
       title,
       message,
