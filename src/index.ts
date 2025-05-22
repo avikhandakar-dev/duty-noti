@@ -20,6 +20,8 @@ import { startNoPortfolioScheduler } from "./cron/noPortfolio";
 import { startNoHoldingsTodayScheduler } from "./cron/noHoldingsToday";
 import { startHasHoldingsScheduler } from "./cron/hasHoldings";
 import { startPlanEndScheduler } from "./cron/planEnd";
+import { startProfitHoldingsScheduler } from "./cron/portfolioProfit";
+import { startLossHoldingsScheduler } from "./cron/portfolioLoss";
 
 const app = express();
 const httpServer = createServer(app);
@@ -51,6 +53,8 @@ startNoPortfolioScheduler();
 startNoHoldingsTodayScheduler();
 startHasHoldingsScheduler();
 startPlanEndScheduler();
+// startProfitHoldingsScheduler();
+startLossHoldingsScheduler();
 app.use(errorHandlerMiddleware);
 app.use(notFoundMiddleware);
 

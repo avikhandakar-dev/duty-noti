@@ -27,6 +27,8 @@ model User {
     pushTokens             PushNotificationToken[]
     lastReadAll            DateTime                @default(now())
     lastViewAll            DateTime                @default(now())
+
+    @@index([clerkId])
 }
 
 model PushNotificationToken {
@@ -236,6 +238,11 @@ model Notification {
     updatedAt       DateTime @updatedAt @map("updated_at")
     seenBy          SeenBy[]
     readBy          ReadBy[]
+
+    @@index([userId])
+    @@index([createdAt])
+    @@index([userId, createdAt])
+    @@index([type])
 }
 
 model SeenBy {
@@ -247,6 +254,9 @@ model SeenBy {
     updatedAt      DateTime      @updatedAt @map("updated_at")
 
     @@unique([notificationId, userId])
+    @@index([userId])
+    @@index([notificationId])
+    @@index([userId, notificationId])
 }
 
 model ReadBy {
@@ -258,6 +268,9 @@ model ReadBy {
     updatedAt      DateTime      @updatedAt @map("updated_at")
 
     @@unique([notificationId, userId])
+    @@index([userId])
+    @@index([notificationId])
+    @@index([userId, notificationId])
 }
 
 model AiNotification {

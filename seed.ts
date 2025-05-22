@@ -1,14 +1,15 @@
 import prisma from "@/src/lib/prisma";
 import { classifyComment } from "./src/lib/ai.utils";
-import { subDays } from "date-fns";
+import { subDays, subMinutes } from "date-fns";
 
 const main = async () => {
-  const cutoffDate = subDays(new Date(), 14);
+  // Delete notifications older than 10 minutes
+  const cutoffDate = subMinutes(new Date(), 10);
 
   const deleted = await prisma.notification.deleteMany({
     where: {
       createdAt: {
-        lt: cutoffDate,
+        gt: cutoffDate,
       },
     },
   });

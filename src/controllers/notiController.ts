@@ -548,6 +548,7 @@ const getAll = async (req: any, res: Response) => {
     const page = parseInt(req.params.page as string, 10) || 1;
     const limit = 20;
     const skip = (page - 1) * limit;
+
     const notis = await prisma.notification.findMany({
       where: {
         OR: [
