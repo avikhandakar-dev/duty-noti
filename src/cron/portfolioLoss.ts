@@ -173,7 +173,7 @@ Write only the short description in Bangla.
         data: {
           companyName: token.title,
           message: token.body || "",
-          logo: "",
+          logo: `https://s3-api.bayah.app/cdn/symbol/logo/${token.stock}.svg`,
           type: "push",
           userId: token.userId,
         },
