@@ -115,13 +115,6 @@ async function sendPushNotiReaction(data: any) {
       return;
     }
 
-    if (targetUser.notificationPreference) {
-      if (targetUser.notificationPreference.enableFullNotifications == false) {
-        console.log("Notification disabled");
-        return;
-      }
-    }
-
     const pushTokens = targetUser.pushTokens;
 
     const tokens: string[] = pushTokens.map((token) => token.token);
@@ -139,6 +132,12 @@ async function sendPushNotiReaction(data: any) {
         entityId: targetComment?.analysisId,
       },
     });
+    if (targetUser.notificationPreference) {
+      if (targetUser.notificationPreference.enableFullNotifications == false) {
+        console.log("Notification disabled");
+        return;
+      }
+    }
     await sendPushNotificationsInBatches(title, body, tokens);
   } catch (error: any) {
     throw new Error(error.message);
