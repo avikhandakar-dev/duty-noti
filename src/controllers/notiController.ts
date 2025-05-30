@@ -330,7 +330,10 @@ const getComments = async (req: any, res: Response) => {
       where: {
         analysisId,
         parentId: null,
-        isPrivate: false,
+        OR: [
+          { isPrivate: false },
+          { isPrivate: true, userId: userId as string },
+        ],
       },
     });
 
@@ -612,6 +615,10 @@ const getAnalysis = async (req: any, res: Response) => {
     const t1 = prisma.analysisComment.count({
       where: {
         analysisId: id,
+        OR: [
+          { isPrivate: false },
+          { isPrivate: true, userId: userId as string },
+        ],
       },
     });
     const t2 = prisma.analysisReact.count({
