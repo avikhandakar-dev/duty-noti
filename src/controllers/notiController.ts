@@ -332,7 +332,12 @@ const getComments = async (req: any, res: Response) => {
         parentId: null,
         OR: [
           { isPrivate: false },
-          { isPrivate: true, userId: userId as string },
+          {
+            isPrivate: true,
+            userId: {
+              not: userId,
+            },
+          },
         ],
       },
     });
