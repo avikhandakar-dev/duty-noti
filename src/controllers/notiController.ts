@@ -330,15 +330,7 @@ const getComments = async (req: any, res: Response) => {
       where: {
         analysisId,
         parentId: null,
-        OR: [
-          { isPrivate: false },
-          {
-            isPrivate: true,
-            userId: {
-              not: userId,
-            },
-          },
-        ],
+        isPrivate: false,
       },
     });
 
