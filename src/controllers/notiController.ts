@@ -281,7 +281,12 @@ const getComments = async (req: any, res: Response) => {
         parentId: null, // Only root comments
         OR: [
           { isPrivate: false }, // Public comments visible to all
-          { isPrivate: true, userId: userId as string }, // Private comments visible only to owner
+          {
+            isPrivate: true,
+            userId: {
+              not: userId,
+            },
+          }, // Private comments visible only to owner
         ],
       },
       orderBy: {
