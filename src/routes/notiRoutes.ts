@@ -15,11 +15,13 @@ import {
   getAll,
   getUnreadCount,
   getAnalysis,
+  sendCommentPushNotification,
 } from "../controllers/notiController";
 
 const router = express.Router();
 
 router.route("/send/push").post(sendPushNotification);
+router.route("/send/comment-push").post(sendCommentPushNotification);
 router.route("/send/analysis").post(sendAnalysis);
 router.route("/add/comment").post(addComment);
 router.route("/give/reaction").post(giveReaction);

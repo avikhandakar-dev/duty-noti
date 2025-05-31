@@ -169,7 +169,7 @@ const addComment = async (req: any, res: Response) => {
         ...(parentId && { parentId }),
       },
     });
-    if (parentId) {
+    if (parentId && !shouldBePrivate) {
       await aiQueue.add(`send-push-notification-comment`, {
         userId,
         analysisId,
@@ -179,6 +179,36 @@ const addComment = async (req: any, res: Response) => {
       });
     }
     res.status(StatusCodes.OK).json({ comment });
+  } catch (error: any) {
+    console.log(error);
+    throw new BadRequestError(error.message || "Something went wrong!");
+  }
+};
+
+const sendCommentPushNotification = async (req: any, res: Response) => {
+  try {
+    const { commentId } = req.body;
+    const comment = await prisma.analysisComment.findUnique({
+      where: {
+        id: commentId,
+      },
+    });
+    if (!comment) throw new BadRequestError("Comment not found");
+    const { userId, analysisId, parentId } = comment;
+    const user = await prisma.user.findUnique({
+      where: {
+        clerkId: userId,
+      },
+    });
+    if (!user) throw new BadRequestError("User not found");
+    await aiQueue.add(`send-push-notification-comment`, {
+      userId,
+      analysisId,
+      parentId,
+      logo: user?.image,
+      queueType: "SEND-PUSH-NOTIFICATION-COMMENT",
+    });
+    res.status(StatusCodes.OK).json({ success: true });
   } catch (error: any) {
     console.log(error);
     throw new BadRequestError(error.message || "Something went wrong!");
@@ -696,4 +726,5 @@ export {
   getAll,
   getUnreadCount,
   getAnalysis,
+  sendCommentPushNotification,
 };
