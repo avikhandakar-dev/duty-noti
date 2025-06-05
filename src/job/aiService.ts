@@ -282,9 +282,12 @@ async function sendPushNotiToTrialUser(data: any) {
 async function sendPushNotiToFreeUser(data: any) {
   try {
     const { title, body, saveNotification } = data;
+    const nowPlus7Days = new Date();
+    nowPlus7Days.setDate(nowPlus7Days.getDate() + 7);
+
     const notFreeUsers = await prisma.activePlan.findMany({
       where: {
-        expiresOn: { gt: new Date() },
+        expiresOn: { gt: nowPlus7Days },
       },
       select: {
         user: {
