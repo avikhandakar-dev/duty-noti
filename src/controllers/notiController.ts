@@ -11,6 +11,7 @@ import { redisCache } from "../lib/redis";
 const sendSchema = z.object({
   title: z.string(),
   body: z.string(),
+  saveNotification: z.boolean().default(false),
 });
 
 const postReactionSchema = z.object({
@@ -50,12 +51,13 @@ const sendAnalysisSchema = z.object({
 
 const sendPushNotification = async (req: any, res: Response) => {
   try {
-    const { title, body } = sendSchema.parse(req.body);
+    const { title, body, saveNotification } = sendSchema.parse(req.body);
     console.log(title, body);
 
     await aiQueue.add(`send-push-notification`, {
       title,
       body,
+      saveNotification,
       queueType: "SEND-PUSH-NOTIFICATION",
     });
 
@@ -68,12 +70,13 @@ const sendPushNotification = async (req: any, res: Response) => {
 
 const sendPushNotificationToTrialUser = async (req: any, res: Response) => {
   try {
-    const { title, body } = sendSchema.parse(req.body);
+    const { title, body, saveNotification } = sendSchema.parse(req.body);
     console.log(title, body);
 
     await aiQueue.add(`send-push-notification-to-trial-user`, {
       title,
       body,
+      saveNotification,
       queueType: "SEND-PUSH-NOTIFICATION-TO-TRIAL-USER",
     });
 

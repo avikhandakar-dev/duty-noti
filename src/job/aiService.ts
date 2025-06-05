@@ -219,7 +219,7 @@ async function sendPushNoti(data: any) {
 
 async function sendPushNotiToTrialUser(data: any) {
   try {
-    const { title, body } = data;
+    const { title, body, saveNotification } = data;
     const trialUsers = await prisma.activePlan.findMany({
       where: {
         expiresOn: { gt: new Date() },
@@ -267,10 +267,12 @@ async function sendPushNotiToTrialUser(data: any) {
       }
       tokens.push(token.token);
     }
-    // await prisma.notification.createMany({
-    //   data: prismaTransaction,
-    //   skipDuplicates: true,
-    // });
+    if (saveNotification) {
+      await prisma.notification.createMany({
+        data: prismaTransaction,
+        skipDuplicates: true,
+      });
+    }
     await sendPushNotificationsInBatches(title, body, tokens);
   } catch (error: any) {
     throw new Error(error.message);
@@ -279,7 +281,7 @@ async function sendPushNotiToTrialUser(data: any) {
 
 async function sendPushNotiToFreeUser(data: any) {
   try {
-    const { title, body } = data;
+    const { title, body, saveNotification } = data;
     const notFreeUsers = await prisma.activePlan.findMany({
       where: {
         expiresOn: { lt: new Date() },
@@ -324,10 +326,12 @@ async function sendPushNotiToFreeUser(data: any) {
       }
       tokens.push(token.token);
     }
-    // await prisma.notification.createMany({
-    //   data: prismaTransaction,
-    //   skipDuplicates: true,
-    // });
+    if (saveNotification) {
+      await prisma.notification.createMany({
+        data: prismaTransaction,
+        skipDuplicates: true,
+      });
+    }
     await sendPushNotificationsInBatches(title, body, tokens);
   } catch (error: any) {
     throw new Error(error.message);
