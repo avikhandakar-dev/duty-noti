@@ -284,7 +284,7 @@ async function sendPushNotiToFreeUser(data: any) {
     const { title, body, saveNotification } = data;
     const notFreeUsers = await prisma.activePlan.findMany({
       where: {
-        expiresOn: { lt: new Date() },
+        expiresOn: { gt: new Date() },
       },
       select: {
         user: {
