@@ -3,18 +3,52 @@ import { classifyComment } from "./src/lib/ai.utils";
 import { subDays, subMinutes } from "date-fns";
 
 const main = async () => {
-  // Delete notifications older than 10 minutes
-  const cutoffDate = subMinutes(new Date(), 10);
-
-  const deleted = await prisma.notification.deleteMany({
+  const notFreeUsers = await prisma.activePlan.findMany({
     where: {
-      createdAt: {
-        gt: cutoffDate,
+      expiresOn: { gt: new Date() },
+    },
+    select: {
+      user: {
+        select: {
+          clerkId: true,
+        },
       },
     },
   });
+  console.log(notFreeUsers.length);
+  const userIds = notFreeUsers.map((user) => user.user.clerkId);
+  const pushTokens = await prisma.pushNotificationToken.findMany({
+    where: {
+      userId: {
+        notIn: userIds,
+      },
+    },
+  });
+  const freeIds = pushTokens.map((token) => token.userId);
+  const uniqueIds = [...new Set([...freeIds])];
+  console.log(uniqueIds.length, "uniqueIds");
 
-  console.log(`${deleted.count} old notifications deleted.`);
+  const trialUsers = await prisma.activePlan.findMany({
+    where: {
+      expiresOn: { gt: new Date() },
+      plan: {
+        isTrial: true,
+      },
+      // user: {
+      //   notificationPreference: {
+      //     enableShortNotifications: true,
+      //   },
+      // },
+    },
+    select: {
+      user: {
+        select: {
+          clerkId: true,
+        },
+      },
+    },
+  });
+  console.log(trialUsers.length, "trialUsers");
 };
 
 main();

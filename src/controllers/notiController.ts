@@ -89,12 +89,13 @@ const sendPushNotificationToTrialUser = async (req: any, res: Response) => {
 
 const sendPushNotificationToFreeUser = async (req: any, res: Response) => {
   try {
-    const { title, body } = sendSchema.parse(req.body);
+    const { title, body, saveNotification } = sendSchema.parse(req.body);
     console.log(title, body);
 
     await aiQueue.add(`send-push-notification-to-free-user`, {
       title,
       body,
+      saveNotification,
       queueType: "SEND-PUSH-NOTIFICATION-TO-FREE-USER",
     });
 
