@@ -15,6 +15,8 @@ const addToAIQueue = (operationType: string) => {
       return sendPushNotiComment;
     case "SEND-PUSH-NOTIFICATION-REACTION":
       return sendPushNotiReaction;
+    case "UPDATE-NEWS":
+      return updateNews;
     default:
       throw new Error("Invalid operation type");
   }
@@ -374,6 +376,97 @@ async function sendPushNotiAnalysis(data: any) {
       },
     });
     await sendPushNotificationsInBatches(title, message, tokens);
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+}
+
+async function updateNews(data: any) {
+  try {
+    const markets = await prisma.marketData.findMany({
+      where: {
+        country: "BD",
+      },
+      select: {
+        symbol: true,
+      },
+    });
+    console.log(markets.length);
+
+    // Process markets in smaller batches to avoid connection pool exhaustion
+    const marketBatchSize = 5; // Process 5 markets at a time
+
+    for (let i = 0; i < markets.length; i += marketBatchSize) {
+      const marketBatch = markets.slice(i, i + marketBatchSize);
+      const promises: Promise<any>[] = [];
+
+      // Fetch news for current batch of markets
+      for (const market of marketBatch) {
+        const symbol = market.symbol;
+        const newsResponse = await fetch(
+          `https://stocknow.com.bd/api/v1/instruments/${symbol}/news`
+        );
+        const newsData = await newsResponse.json();
+        const newsItems = newsData.data;
+        console.log(
+          `Fetched ${newsItems?.length || 0} news items for ${symbol}`
+        );
+
+        if (!newsItems) {
+          console.log("No data found for ", symbol);
+          continue;
+        }
+
+        for (const item of newsItems) {
+          promises.push(
+            prisma.news.upsert({
+              where: {
+                id: `${item.id}`,
+              },
+              update: {
+                symbol,
+                title: item.title || "",
+                details: item.details || "",
+                bn: item.bn || "",
+                createdAt: new Date(item?.post_date),
+              },
+              create: {
+                id: `${item.id}`,
+                symbol,
+                title: item.title || "",
+                details: item.details || "",
+                bn: item.bn || "",
+                createdAt: new Date(item?.post_date),
+              },
+            })
+          );
+        }
+      }
+
+      // Process database operations in smaller batches
+      const dbBatchSize = 10; // Reduced from 50 to 10
+      for (let j = 0; j < promises.length; j += dbBatchSize) {
+        const batch = promises.slice(j, j + dbBatchSize);
+        await Promise.all(batch);
+        console.log(
+          `Processed DB batch ${Math.floor(j / dbBatchSize) + 1}/${Math.ceil(
+            promises.length / dbBatchSize
+          )} for markets ${i + 1}-${Math.min(
+            i + marketBatchSize,
+            markets.length
+          )}`
+        );
+
+        // Small delay to prevent overwhelming the connection pool
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+
+      console.log(
+        `Completed market batch ${
+          Math.floor(i / marketBatchSize) + 1
+        }/${Math.ceil(markets.length / marketBatchSize)}`
+      );
+    }
   } catch (error: any) {
     throw new Error(error.message);
   }

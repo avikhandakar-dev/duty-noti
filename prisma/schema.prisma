@@ -539,9 +539,20 @@ model MarketData {
     updatedAt                                 DateTime      @updatedAt @map("updated_at")
     rransactions                              Transaction[]
     holdings                                  Holding[]
+    resolution                                String        @default("1D")
 
     @@unique([symbol, country])
+    @@unique([symbol, country, resolution])
 }
+
+// enum Resolution {
+//     "15M"
+//     "30M"
+//     "1H"
+//     "2H"
+//     "4H"
+//     "1D"
+// }
 
 model MarketList {
     id                           String   @id @default(cuid())
@@ -660,10 +671,10 @@ model Holding {
     id           String     @id @default(uuid())
     portfolioId  String
     marketDataId String
+    stock        MarketData @relation(fields: [marketDataId], references: [id])
     quantity     Int        @default(0)
     avgCost      Float      @default(0)
     portfolio    Portfolio  @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
-    stock        MarketData @relation(fields: [marketDataId], references: [id])
     brokerFee    Float      @default(0)
     risk         Float      @default(0)
     initialRisk  Float      @default(0)
@@ -762,14 +773,24 @@ model PricingPlan {
 }
 
 model Coupon {
-    id          String   @id @default(cuid())
-    code        String   @unique
+    id          String        @id @default(cuid())
+    code        String        @unique
     discount    Float
     maxDiscount Float?
     minOrder    Float?
-    isActive    Boolean  @default(true)
-    createdAt   DateTime @default(now()) @map("created_at")
-    updatedAt   DateTime @updatedAt @map("updated_at")
+    isActive    Boolean       @default(true)
+    createdAt   DateTime      @default(now()) @map("created_at")
+    updatedAt   DateTime      @updatedAt @map("updated_at")
+    usages      CouponUsage[]
+}
+
+model CouponUsage {
+    id        String   @id @default(cuid())
+    userId    String
+    couponId  String
+    coupon    Coupon   @relation(fields: [couponId], references: [id])
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
 }
 
 model ActivePlan {
@@ -812,4 +833,14 @@ model Order {
     startedOn    DateTime?
     createdAt    DateTime    @default(now()) @map("created_at")
     updatedAt    DateTime    @updatedAt @map("updated_at")
+}
+
+model News {
+    id        String   @id @default(cuid())
+    symbol    String?
+    title     String?
+    details   String?
+    bn        String?
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
 }
