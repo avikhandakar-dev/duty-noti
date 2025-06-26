@@ -5,6 +5,7 @@ import { StatusCodes } from "http-status-codes";
 import fetch from "node-fetch";
 import { JSDOM } from "jsdom";
 import { redisCache } from "@/src/lib/redis";
+import { aiQueue } from "../job/queue";
 
 const indexTvJp = async (req: any, res: Response) => {
   try {
@@ -1118,6 +1119,18 @@ const bdCategory = async (req: any, res: Response) => {
   }
 };
 
+const allStockTv = async (req: any, res: Response) => {
+  try {
+    await aiQueue.add(`update-all-stock-tv`, {
+      queueType: "UPDATE-ALL-STOCK-TV",
+    });
+    res.status(StatusCodes.OK).json({ success: true });
+  } catch (error) {
+    console.log(error);
+    throw new BadRequestError("Something went wrong!");
+  }
+};
+
 export {
   indexTvJp,
   presetTvJp,
@@ -1126,4 +1139,5 @@ export {
   amarstockAllMarket,
   dsebdIndex,
   bdCategory,
+  allStockTv,
 };

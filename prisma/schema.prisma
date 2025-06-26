@@ -159,6 +159,7 @@ model Support {
     subject   String
     message   String
     userId    String
+    user      Json?
     reply     String?
     image     String?
     image2    String?
@@ -424,10 +425,10 @@ model Market {
 }
 
 model MarketData {
-    id                                        String        @id @default(cuid())
+    id                                        String  @id @default(cuid())
     symbol                                    String
     content                                   String?
-    country                                   String        @default("BD")
+    country                                   String  @default("BD")
     name                                      String?
     description                               String?
     logoid                                    String?
@@ -535,24 +536,764 @@ model MarketData {
     vwma                                      String?
     rec_hullma9                               String?
     hullma9                                   String?
-    createdAt                                 DateTime      @default(now()) @map("created_at")
-    updatedAt                                 DateTime      @updatedAt @map("updated_at")
-    rransactions                              Transaction[]
-    holdings                                  Holding[]
-    resolution                                String        @default("1D")
+    // Pivot Points - Classic
+    pivot_m_classic_r3                        String?
+    pivot_m_classic_r2                        String?
+    pivot_m_classic_r1                        String?
+    pivot_m_classic_middle                    String?
+    pivot_m_classic_s1                        String?
+    pivot_m_classic_s2                        String?
+    pivot_m_classic_s3                        String?
+
+    createdAt    DateTime      @default(now()) @map("created_at")
+    updatedAt    DateTime      @updatedAt @map("updated_at")
+    rransactions Transaction[]
+    holdings     Holding[]
+    R15M         R15M?
+    R30M         R30M?
+    R1H          R1H?
+    R2H          R2H?
+    R4H          R4H?
+    R1W          R1W?
+    R1M          R1M?
 
     @@unique([symbol, country])
-    @@unique([symbol, country, resolution])
 }
 
-// enum Resolution {
-//     "15M"
-//     "30M"
-//     "1H"
-//     "2H"
-//     "4H"
-//     "1D"
-// }
+model R15M {
+    marketData   MarketData @relation(fields: [marketDataId], references: [id])
+    marketDataId String     @unique
+
+    // Recommendations
+    recommend_other String?
+    recommend_all   String?
+    recommend_ma    String?
+
+    // Technical Indicators
+    rsi           String?
+    rsi_1         String?
+    stoch_k       String?
+    stoch_d       String?
+    stoch_k_1     String?
+    stoch_d_1     String?
+    cci20         String?
+    cci20_1       String?
+    adx           String?
+    adxplus_di    String?
+    adxminus_di   String?
+    adxplus_di_1  String?
+    adxminus_di_1 String?
+    ao            String?
+    ao_1          String?
+    ao_2          String?
+    mom           String?
+    mom_1         String?
+    macd_macd     String?
+    macd_signal   String?
+    rec_stoch_rsi String?
+    stoch_rsi_k   String?
+    rec_wr        String?
+    w_r           String?
+    rec_bbpower   String?
+    bbpower       String?
+    rec_uo        String?
+    uo            String?
+
+    // Moving Averages
+    ema10          String?
+    close          String?
+    sma10          String?
+    ema20          String?
+    sma20          String?
+    ema30          String?
+    sma30          String?
+    ema50          String?
+    sma50          String?
+    ema100         String?
+    sma100         String?
+    ema200         String?
+    sma200         String?
+    rec_ichimoku   String?
+    ichimoku_bline String?
+    rec_vwma       String?
+    vwma           String?
+    rec_hullma9    String?
+    hullma9        String?
+
+    // Pivot Points - Classic
+    pivot_m_classic_r3     String?
+    pivot_m_classic_r2     String?
+    pivot_m_classic_r1     String?
+    pivot_m_classic_middle String?
+    pivot_m_classic_s1     String?
+    pivot_m_classic_s2     String?
+    pivot_m_classic_s3     String?
+
+    // Pivot Points - Fibonacci
+    pivot_m_fibonacci_r3     String?
+    pivot_m_fibonacci_r2     String?
+    pivot_m_fibonacci_r1     String?
+    pivot_m_fibonacci_middle String?
+    pivot_m_fibonacci_s1     String?
+    pivot_m_fibonacci_s2     String?
+    pivot_m_fibonacci_s3     String?
+
+    // Pivot Points - Camarilla
+    pivot_m_camarilla_r3     String?
+    pivot_m_camarilla_r2     String?
+    pivot_m_camarilla_r1     String?
+    pivot_m_camarilla_middle String?
+    pivot_m_camarilla_s1     String?
+    pivot_m_camarilla_s2     String?
+    pivot_m_camarilla_s3     String?
+
+    // Pivot Points - Woodie
+    pivot_m_woodie_r3     String?
+    pivot_m_woodie_r2     String?
+    pivot_m_woodie_r1     String?
+    pivot_m_woodie_middle String?
+    pivot_m_woodie_s1     String?
+    pivot_m_woodie_s2     String?
+    pivot_m_woodie_s3     String?
+
+    // Pivot Points - Demark
+    pivot_m_demark_r1     String?
+    pivot_m_demark_middle String?
+    pivot_m_demark_s1     String?
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+}
+
+model R30M {
+    marketData   MarketData @relation(fields: [marketDataId], references: [id])
+    marketDataId String     @unique
+
+    // Recommendations
+    recommend_other String?
+    recommend_all   String?
+    recommend_ma    String?
+
+    // Technical Indicators
+    rsi           String?
+    rsi_1         String?
+    stoch_k       String?
+    stoch_d       String?
+    stoch_k_1     String?
+    stoch_d_1     String?
+    cci20         String?
+    cci20_1       String?
+    adx           String?
+    adxplus_di    String?
+    adxminus_di   String?
+    adxplus_di_1  String?
+    adxminus_di_1 String?
+    ao            String?
+    ao_1          String?
+    ao_2          String?
+    mom           String?
+    mom_1         String?
+    macd_macd     String?
+    macd_signal   String?
+    rec_stoch_rsi String?
+    stoch_rsi_k   String?
+    rec_wr        String?
+    w_r           String?
+    rec_bbpower   String?
+    bbpower       String?
+    rec_uo        String?
+    uo            String?
+
+    // Moving Averages
+    ema10          String?
+    close          String?
+    sma10          String?
+    ema20          String?
+    sma20          String?
+    ema30          String?
+    sma30          String?
+    ema50          String?
+    sma50          String?
+    ema100         String?
+    sma100         String?
+    ema200         String?
+    sma200         String?
+    rec_ichimoku   String?
+    ichimoku_bline String?
+    rec_vwma       String?
+    vwma           String?
+    rec_hullma9    String?
+    hullma9        String?
+
+    // Pivot Points - Classic
+    pivot_m_classic_r3     String?
+    pivot_m_classic_r2     String?
+    pivot_m_classic_r1     String?
+    pivot_m_classic_middle String?
+    pivot_m_classic_s1     String?
+    pivot_m_classic_s2     String?
+    pivot_m_classic_s3     String?
+
+    // Pivot Points - Fibonacci
+    pivot_m_fibonacci_r3     String?
+    pivot_m_fibonacci_r2     String?
+    pivot_m_fibonacci_r1     String?
+    pivot_m_fibonacci_middle String?
+    pivot_m_fibonacci_s1     String?
+    pivot_m_fibonacci_s2     String?
+    pivot_m_fibonacci_s3     String?
+
+    // Pivot Points - Camarilla
+    pivot_m_camarilla_r3     String?
+    pivot_m_camarilla_r2     String?
+    pivot_m_camarilla_r1     String?
+    pivot_m_camarilla_middle String?
+    pivot_m_camarilla_s1     String?
+    pivot_m_camarilla_s2     String?
+    pivot_m_camarilla_s3     String?
+
+    // Pivot Points - Woodie
+    pivot_m_woodie_r3     String?
+    pivot_m_woodie_r2     String?
+    pivot_m_woodie_r1     String?
+    pivot_m_woodie_middle String?
+    pivot_m_woodie_s1     String?
+    pivot_m_woodie_s2     String?
+    pivot_m_woodie_s3     String?
+
+    // Pivot Points - Demark
+    pivot_m_demark_r1     String?
+    pivot_m_demark_middle String?
+    pivot_m_demark_s1     String?
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+}
+
+model R1H {
+    marketData   MarketData @relation(fields: [marketDataId], references: [id])
+    marketDataId String     @unique
+
+    // Recommendations
+    recommend_other String?
+    recommend_all   String?
+    recommend_ma    String?
+
+    // Technical Indicators
+    rsi           String?
+    rsi_1         String?
+    stoch_k       String?
+    stoch_d       String?
+    stoch_k_1     String?
+    stoch_d_1     String?
+    cci20         String?
+    cci20_1       String?
+    adx           String?
+    adxplus_di    String?
+    adxminus_di   String?
+    adxplus_di_1  String?
+    adxminus_di_1 String?
+    ao            String?
+    ao_1          String?
+    ao_2          String?
+    mom           String?
+    mom_1         String?
+    macd_macd     String?
+    macd_signal   String?
+    rec_stoch_rsi String?
+    stoch_rsi_k   String?
+    rec_wr        String?
+    w_r           String?
+    rec_bbpower   String?
+    bbpower       String?
+    rec_uo        String?
+    uo            String?
+
+    // Moving Averages
+    ema10          String?
+    close          String?
+    sma10          String?
+    ema20          String?
+    sma20          String?
+    ema30          String?
+    sma30          String?
+    ema50          String?
+    sma50          String?
+    ema100         String?
+    sma100         String?
+    ema200         String?
+    sma200         String?
+    rec_ichimoku   String?
+    ichimoku_bline String?
+    rec_vwma       String?
+    vwma           String?
+    rec_hullma9    String?
+    hullma9        String?
+
+    // Pivot Points - Classic
+    pivot_m_classic_r3     String?
+    pivot_m_classic_r2     String?
+    pivot_m_classic_r1     String?
+    pivot_m_classic_middle String?
+    pivot_m_classic_s1     String?
+    pivot_m_classic_s2     String?
+    pivot_m_classic_s3     String?
+
+    // Pivot Points - Fibonacci
+    pivot_m_fibonacci_r3     String?
+    pivot_m_fibonacci_r2     String?
+    pivot_m_fibonacci_r1     String?
+    pivot_m_fibonacci_middle String?
+    pivot_m_fibonacci_s1     String?
+    pivot_m_fibonacci_s2     String?
+    pivot_m_fibonacci_s3     String?
+
+    // Pivot Points - Camarilla
+    pivot_m_camarilla_r3     String?
+    pivot_m_camarilla_r2     String?
+    pivot_m_camarilla_r1     String?
+    pivot_m_camarilla_middle String?
+    pivot_m_camarilla_s1     String?
+    pivot_m_camarilla_s2     String?
+    pivot_m_camarilla_s3     String?
+
+    // Pivot Points - Woodie
+    pivot_m_woodie_r3     String?
+    pivot_m_woodie_r2     String?
+    pivot_m_woodie_r1     String?
+    pivot_m_woodie_middle String?
+    pivot_m_woodie_s1     String?
+    pivot_m_woodie_s2     String?
+    pivot_m_woodie_s3     String?
+
+    // Pivot Points - Demark
+    pivot_m_demark_r1     String?
+    pivot_m_demark_middle String?
+    pivot_m_demark_s1     String?
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+}
+
+model R2H {
+    marketData   MarketData @relation(fields: [marketDataId], references: [id])
+    marketDataId String     @unique
+
+    // Recommendations
+    recommend_other String?
+    recommend_all   String?
+    recommend_ma    String?
+
+    // Technical Indicators
+    rsi           String?
+    rsi_1         String?
+    stoch_k       String?
+    stoch_d       String?
+    stoch_k_1     String?
+    stoch_d_1     String?
+    cci20         String?
+    cci20_1       String?
+    adx           String?
+    adxplus_di    String?
+    adxminus_di   String?
+    adxplus_di_1  String?
+    adxminus_di_1 String?
+    ao            String?
+    ao_1          String?
+    ao_2          String?
+    mom           String?
+    mom_1         String?
+    macd_macd     String?
+    macd_signal   String?
+    rec_stoch_rsi String?
+    stoch_rsi_k   String?
+    rec_wr        String?
+    w_r           String?
+    rec_bbpower   String?
+    bbpower       String?
+    rec_uo        String?
+    uo            String?
+
+    // Moving Averages
+    ema10          String?
+    close          String?
+    sma10          String?
+    ema20          String?
+    sma20          String?
+    ema30          String?
+    sma30          String?
+    ema50          String?
+    sma50          String?
+    ema100         String?
+    sma100         String?
+    ema200         String?
+    sma200         String?
+    rec_ichimoku   String?
+    ichimoku_bline String?
+    rec_vwma       String?
+    vwma           String?
+    rec_hullma9    String?
+    hullma9        String?
+
+    // Pivot Points - Classic
+    pivot_m_classic_r3     String?
+    pivot_m_classic_r2     String?
+    pivot_m_classic_r1     String?
+    pivot_m_classic_middle String?
+    pivot_m_classic_s1     String?
+    pivot_m_classic_s2     String?
+    pivot_m_classic_s3     String?
+
+    // Pivot Points - Fibonacci
+    pivot_m_fibonacci_r3     String?
+    pivot_m_fibonacci_r2     String?
+    pivot_m_fibonacci_r1     String?
+    pivot_m_fibonacci_middle String?
+    pivot_m_fibonacci_s1     String?
+    pivot_m_fibonacci_s2     String?
+    pivot_m_fibonacci_s3     String?
+
+    // Pivot Points - Camarilla
+    pivot_m_camarilla_r3     String?
+    pivot_m_camarilla_r2     String?
+    pivot_m_camarilla_r1     String?
+    pivot_m_camarilla_middle String?
+    pivot_m_camarilla_s1     String?
+    pivot_m_camarilla_s2     String?
+    pivot_m_camarilla_s3     String?
+
+    // Pivot Points - Woodie
+    pivot_m_woodie_r3     String?
+    pivot_m_woodie_r2     String?
+    pivot_m_woodie_r1     String?
+    pivot_m_woodie_middle String?
+    pivot_m_woodie_s1     String?
+    pivot_m_woodie_s2     String?
+    pivot_m_woodie_s3     String?
+
+    // Pivot Points - Demark
+    pivot_m_demark_r1     String?
+    pivot_m_demark_middle String?
+    pivot_m_demark_s1     String?
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+}
+
+model R4H {
+    marketData   MarketData @relation(fields: [marketDataId], references: [id])
+    marketDataId String     @unique
+
+    // Recommendations
+    recommend_other String?
+    recommend_all   String?
+    recommend_ma    String?
+
+    // Technical Indicators
+    rsi           String?
+    rsi_1         String?
+    stoch_k       String?
+    stoch_d       String?
+    stoch_k_1     String?
+    stoch_d_1     String?
+    cci20         String?
+    cci20_1       String?
+    adx           String?
+    adxplus_di    String?
+    adxminus_di   String?
+    adxplus_di_1  String?
+    adxminus_di_1 String?
+    ao            String?
+    ao_1          String?
+    ao_2          String?
+    mom           String?
+    mom_1         String?
+    macd_macd     String?
+    macd_signal   String?
+    rec_stoch_rsi String?
+    stoch_rsi_k   String?
+    rec_wr        String?
+    w_r           String?
+    rec_bbpower   String?
+    bbpower       String?
+    rec_uo        String?
+    uo            String?
+
+    // Moving Averages
+    ema10          String?
+    close          String?
+    sma10          String?
+    ema20          String?
+    sma20          String?
+    ema30          String?
+    sma30          String?
+    ema50          String?
+    sma50          String?
+    ema100         String?
+    sma100         String?
+    ema200         String?
+    sma200         String?
+    rec_ichimoku   String?
+    ichimoku_bline String?
+    rec_vwma       String?
+    vwma           String?
+    rec_hullma9    String?
+    hullma9        String?
+
+    // Pivot Points - Classic
+    pivot_m_classic_r3     String?
+    pivot_m_classic_r2     String?
+    pivot_m_classic_r1     String?
+    pivot_m_classic_middle String?
+    pivot_m_classic_s1     String?
+    pivot_m_classic_s2     String?
+    pivot_m_classic_s3     String?
+
+    // Pivot Points - Fibonacci
+    pivot_m_fibonacci_r3     String?
+    pivot_m_fibonacci_r2     String?
+    pivot_m_fibonacci_r1     String?
+    pivot_m_fibonacci_middle String?
+    pivot_m_fibonacci_s1     String?
+    pivot_m_fibonacci_s2     String?
+    pivot_m_fibonacci_s3     String?
+
+    // Pivot Points - Camarilla
+    pivot_m_camarilla_r3     String?
+    pivot_m_camarilla_r2     String?
+    pivot_m_camarilla_r1     String?
+    pivot_m_camarilla_middle String?
+    pivot_m_camarilla_s1     String?
+    pivot_m_camarilla_s2     String?
+    pivot_m_camarilla_s3     String?
+
+    // Pivot Points - Woodie
+    pivot_m_woodie_r3     String?
+    pivot_m_woodie_r2     String?
+    pivot_m_woodie_r1     String?
+    pivot_m_woodie_middle String?
+    pivot_m_woodie_s1     String?
+    pivot_m_woodie_s2     String?
+    pivot_m_woodie_s3     String?
+
+    // Pivot Points - Demark
+    pivot_m_demark_r1     String?
+    pivot_m_demark_middle String?
+    pivot_m_demark_s1     String?
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+}
+
+model R1W {
+    marketData   MarketData @relation(fields: [marketDataId], references: [id])
+    marketDataId String     @unique
+
+    // Recommendations
+    recommend_other String?
+    recommend_all   String?
+    recommend_ma    String?
+
+    // Technical Indicators
+    rsi           String?
+    rsi_1         String?
+    stoch_k       String?
+    stoch_d       String?
+    stoch_k_1     String?
+    stoch_d_1     String?
+    cci20         String?
+    cci20_1       String?
+    adx           String?
+    adxplus_di    String?
+    adxminus_di   String?
+    adxplus_di_1  String?
+    adxminus_di_1 String?
+    ao            String?
+    ao_1          String?
+    ao_2          String?
+    mom           String?
+    mom_1         String?
+    macd_macd     String?
+    macd_signal   String?
+    rec_stoch_rsi String?
+    stoch_rsi_k   String?
+    rec_wr        String?
+    w_r           String?
+    rec_bbpower   String?
+    bbpower       String?
+    rec_uo        String?
+    uo            String?
+
+    // Moving Averages
+    ema10          String?
+    close          String?
+    sma10          String?
+    ema20          String?
+    sma20          String?
+    ema30          String?
+    sma30          String?
+    ema50          String?
+    sma50          String?
+    ema100         String?
+    sma100         String?
+    ema200         String?
+    sma200         String?
+    rec_ichimoku   String?
+    ichimoku_bline String?
+    rec_vwma       String?
+    vwma           String?
+    rec_hullma9    String?
+    hullma9        String?
+
+    // Pivot Points - Classic
+    pivot_m_classic_r3     String?
+    pivot_m_classic_r2     String?
+    pivot_m_classic_r1     String?
+    pivot_m_classic_middle String?
+    pivot_m_classic_s1     String?
+    pivot_m_classic_s2     String?
+    pivot_m_classic_s3     String?
+
+    // Pivot Points - Fibonacci
+    pivot_m_fibonacci_r3     String?
+    pivot_m_fibonacci_r2     String?
+    pivot_m_fibonacci_r1     String?
+    pivot_m_fibonacci_middle String?
+    pivot_m_fibonacci_s1     String?
+    pivot_m_fibonacci_s2     String?
+    pivot_m_fibonacci_s3     String?
+
+    // Pivot Points - Camarilla
+    pivot_m_camarilla_r3     String?
+    pivot_m_camarilla_r2     String?
+    pivot_m_camarilla_r1     String?
+    pivot_m_camarilla_middle String?
+    pivot_m_camarilla_s1     String?
+    pivot_m_camarilla_s2     String?
+    pivot_m_camarilla_s3     String?
+
+    // Pivot Points - Woodie
+    pivot_m_woodie_r3     String?
+    pivot_m_woodie_r2     String?
+    pivot_m_woodie_r1     String?
+    pivot_m_woodie_middle String?
+    pivot_m_woodie_s1     String?
+    pivot_m_woodie_s2     String?
+    pivot_m_woodie_s3     String?
+
+    // Pivot Points - Demark
+    pivot_m_demark_r1     String?
+    pivot_m_demark_middle String?
+    pivot_m_demark_s1     String?
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+}
+
+model R1M {
+    marketData   MarketData @relation(fields: [marketDataId], references: [id])
+    marketDataId String     @unique
+
+    // Recommendations
+    recommend_other String?
+    recommend_all   String?
+    recommend_ma    String?
+
+    // Technical Indicators
+    rsi           String?
+    rsi_1         String?
+    stoch_k       String?
+    stoch_d       String?
+    stoch_k_1     String?
+    stoch_d_1     String?
+    cci20         String?
+    cci20_1       String?
+    adx           String?
+    adxplus_di    String?
+    adxminus_di   String?
+    adxplus_di_1  String?
+    adxminus_di_1 String?
+    ao            String?
+    ao_1          String?
+    ao_2          String?
+    mom           String?
+    mom_1         String?
+    macd_macd     String?
+    macd_signal   String?
+    rec_stoch_rsi String?
+    stoch_rsi_k   String?
+    rec_wr        String?
+    w_r           String?
+    rec_bbpower   String?
+    bbpower       String?
+    rec_uo        String?
+    uo            String?
+
+    // Moving Averages
+    ema10          String?
+    close          String?
+    sma10          String?
+    ema20          String?
+    sma20          String?
+    ema30          String?
+    sma30          String?
+    ema50          String?
+    sma50          String?
+    ema100         String?
+    sma100         String?
+    ema200         String?
+    sma200         String?
+    rec_ichimoku   String?
+    ichimoku_bline String?
+    rec_vwma       String?
+    vwma           String?
+    rec_hullma9    String?
+    hullma9        String?
+
+    // Pivot Points - Classic
+    pivot_m_classic_r3     String?
+    pivot_m_classic_r2     String?
+    pivot_m_classic_r1     String?
+    pivot_m_classic_middle String?
+    pivot_m_classic_s1     String?
+    pivot_m_classic_s2     String?
+    pivot_m_classic_s3     String?
+
+    // Pivot Points - Fibonacci
+    pivot_m_fibonacci_r3     String?
+    pivot_m_fibonacci_r2     String?
+    pivot_m_fibonacci_r1     String?
+    pivot_m_fibonacci_middle String?
+    pivot_m_fibonacci_s1     String?
+    pivot_m_fibonacci_s2     String?
+    pivot_m_fibonacci_s3     String?
+
+    // Pivot Points - Camarilla
+    pivot_m_camarilla_r3     String?
+    pivot_m_camarilla_r2     String?
+    pivot_m_camarilla_r1     String?
+    pivot_m_camarilla_middle String?
+    pivot_m_camarilla_s1     String?
+    pivot_m_camarilla_s2     String?
+    pivot_m_camarilla_s3     String?
+
+    // Pivot Points - Woodie
+    pivot_m_woodie_r3     String?
+    pivot_m_woodie_r2     String?
+    pivot_m_woodie_r1     String?
+    pivot_m_woodie_middle String?
+    pivot_m_woodie_s1     String?
+    pivot_m_woodie_s2     String?
+    pivot_m_woodie_s3     String?
+
+    // Pivot Points - Demark
+    pivot_m_demark_r1     String?
+    pivot_m_demark_middle String?
+    pivot_m_demark_s1     String?
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+}
 
 model MarketList {
     id                           String   @id @default(cuid())
@@ -788,7 +1529,7 @@ model CouponUsage {
     id        String   @id @default(cuid())
     userId    String
     couponId  String
-    coupon    Coupon   @relation(fields: [couponId], references: [id])
+    coupon    Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
     createdAt DateTime @default(now()) @map("created_at")
     updatedAt DateTime @updatedAt @map("updated_at")
 }

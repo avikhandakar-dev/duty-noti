@@ -7,6 +7,7 @@ import {
   amarstockAllMarket,
   dsebdIndex,
   bdCategory,
+  allStockTv,
 } from "../controllers/updateController";
 
 const router = express.Router();
@@ -18,5 +19,6 @@ router.route("/all-stocks-tv-jp").post(allStocksTvJp);
 router.route("/amarstock-all-market").post(amarstockAllMarket);
 router.route("/dsebd-index").post(dsebdIndex);
 router.route("/bd-category").post(bdCategory);
+router.route("/all-stock-tv").post(allStockTv);
 
 export { router as updateRoutes };
