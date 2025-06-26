@@ -1,6 +1,7 @@
 import axios from "axios";
 import prisma from "../lib/prisma";
 import { redisCache } from "../lib/redis";
+import { sendMail } from "../lib/mail";
 
 const addToAIQueue = (operationType: string) => {
   switch (operationType) {
@@ -477,6 +478,7 @@ async function updateNews(data: any) {
 
 async function updateAllStockTv(data: any) {
   try {
+    const startTime = Date.now();
     const EndPoint =
       "https://scanner.tradingview.com/bangladesh/scan?label-product=markets-screener";
     const Country = "BD";
@@ -987,8 +989,31 @@ async function updateAllStockTv(data: any) {
       "EX",
       60 * 60 * 24 * 30
     );
+
+    const endTime = Date.now();
+    const duration = (endTime - startTime) / 1000;
+    await sendMail({
+      from: "server@dutyai.app",
+      fromName: "Duty AI",
+      to: "team@dutyai.app",
+      subject: "Successfully updated all stock from TV",
+      html: `
+      <p>Successfully updated all stock from TV</p>
+      <p>Duration: ${duration} seconds</p>
+      `,
+    });
   } catch (error: any) {
     console.log(error);
+    await sendMail({
+      from: "server@dutyai.app",
+      fromName: "Duty AI",
+      to: "team@dutyai.app",
+      subject: "Error: Scrape all stock from TV failed",
+      html: `
+      <p>Error: Scrape all stock from TV failed</p>
+      <p>${error.message}</p>
+      `,
+    });
     throw new Error(error.message);
   }
 }

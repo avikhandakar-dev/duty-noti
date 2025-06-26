@@ -1,7 +1,7 @@
 import { nanoid } from "nanoid";
 import nodemailer from "nodemailer";
 
-type EAddress = "noreply@dutyai.app";
+type EAddress = "noreply@dutyai.app" | "server@dutyai.app";
 
 interface ISendMail {
   from: EAddress;
