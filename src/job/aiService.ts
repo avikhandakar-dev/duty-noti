@@ -187,6 +187,43 @@ export async function sendPushNotificationsInBatches(
   console.log("All notifications sent!");
 }
 
+export async function sendPushNotificationsInBatchesNoSound(
+  title: string,
+  body: string,
+  tokens: string[]
+) {
+  const endpoint = "https://exp.host/--/api/v2/push/send";
+  const batchSize = 100;
+  for (let i = 0; i < tokens.length; i += batchSize) {
+    const batch = tokens.slice(i, i + batchSize);
+
+    try {
+      const response = await axios.post(endpoint, {
+        to: batch,
+        title: title,
+        body: body,
+        sound: null,
+        priority: "high",
+      });
+      console.log(
+        `Batch ${i / batchSize + 1} sent successfully:`,
+        response.data
+      );
+    } catch (error: any) {
+      console.error(
+        `Error sending batch ${i / batchSize + 1}:`,
+        JSON.stringify(error.response.data)
+      );
+    }
+
+    // Wait for 1 second before sending the next batch
+    if (i + batchSize < tokens.length) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+  }
+  console.log("All notifications sent!");
+}
+
 async function sendPushNoti(data: any) {
   try {
     const { title, body, saveNotification } = data;
@@ -218,8 +255,10 @@ async function sendPushNoti(data: any) {
           type: "push",
         },
       });
+      await sendPushNotificationsInBatches(title, body, tokens);
+    } else {
+      await sendPushNotificationsInBatchesNoSound(title, body, tokens);
     }
-    await sendPushNotificationsInBatches(title, body, tokens);
   } catch (error: any) {
     throw new Error(error.message);
   }
