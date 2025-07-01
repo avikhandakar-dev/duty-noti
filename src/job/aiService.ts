@@ -189,7 +189,7 @@ export async function sendPushNotificationsInBatches(
 
 async function sendPushNoti(data: any) {
   try {
-    const { title, body } = data;
+    const { title, body, saveNotification } = data;
     const pushTokens = await prisma.pushNotificationToken.findMany({
       where: {
         OR: [
@@ -209,14 +209,16 @@ async function sendPushNoti(data: any) {
       },
     });
     const tokens = pushTokens.map((token) => token.token);
-    await prisma.notification.create({
-      data: {
-        companyName: title,
-        message: body,
-        logo: "",
-        type: "push",
-      },
-    });
+    if (saveNotification) {
+      await prisma.notification.create({
+        data: {
+          companyName: title,
+          message: body,
+          logo: "",
+          type: "push",
+        },
+      });
+    }
     await sendPushNotificationsInBatches(title, body, tokens);
   } catch (error: any) {
     throw new Error(error.message);
