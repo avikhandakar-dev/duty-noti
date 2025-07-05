@@ -33,6 +33,11 @@ const triggerCron = async () => {
       select: {
         userId: true,
         id: true,
+        user: {
+          select: {
+            clerkId: true,
+          },
+        },
       },
     });
     const userIds = plans.map((plan) => plan.userId);
@@ -85,7 +90,7 @@ const triggerCron = async () => {
     for (let plan of plans) {
       await prisma.notification.create({
         data: {
-          userId: plan.userId,
+          userId: plan.user.clerkId,
           companyName: title || "Plan End",
           message: body || "Your plan is about to expire!",
           logo: "",
