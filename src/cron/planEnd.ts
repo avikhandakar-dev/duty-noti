@@ -65,7 +65,7 @@ const triggerCron = async () => {
 
     await sendPushNotificationsInBatches(
       title || "Plan End",
-      body || "Your plan has ended!",
+      body || "Your plan is about to expire!",
       tokens
     );
 
@@ -81,6 +81,18 @@ const triggerCron = async () => {
         },
       },
     });
+
+    for (let plan of plans) {
+      await prisma.notification.create({
+        data: {
+          userId: plan.userId,
+          companyName: title || "Plan End",
+          message: body || "Your plan is about to expire!",
+          logo: "",
+          type: "push",
+        },
+      });
+    }
   } catch (error) {
     console.error("Error in triggerCron:", error);
     throw new BadRequestError("Something went wrong!");
