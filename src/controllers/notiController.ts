@@ -337,7 +337,7 @@ const getComments = async (req: any, res: Response) => {
           : false,
       },
       skip,
-      take: limitNum,
+      take: 100,
     });
 
     // Then get all descendants for these root comments
