@@ -202,7 +202,7 @@ export async function sendPushNotificationsInBatchesNoSound(
         to: batch,
         title: title,
         body: body,
-        sound: null,
+        sound: "default",
         priority: "high",
       });
       console.log(
