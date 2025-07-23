@@ -20,4 +20,24 @@ const updateNews = async (req: any, res: Response) => {
   }
 };
 
-export { updateNews };
+const getNewsBySymbol = async (req: any, res: Response) => {
+  try {
+    const { symbol } = req.params;
+    if (!symbol) throw new BadRequestError("Symbol is required");
+    const news = await prisma.news.findMany({
+      where: {
+        symbol,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 10,
+    });
+    res.status(StatusCodes.OK).json({ news });
+  } catch (error: any) {
+    console.log(error);
+    throw new BadRequestError(error.message || "Something went wrong!");
+  }
+};
+
+export { updateNews, getNewsBySymbol };
