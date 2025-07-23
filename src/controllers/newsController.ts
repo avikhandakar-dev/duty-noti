@@ -26,7 +26,10 @@ const getNewsBySymbol = async (req: any, res: Response) => {
     if (!symbol) throw new BadRequestError("Symbol is required");
     const news = await prisma.news.findMany({
       where: {
-        symbol,
+        symbol: {
+          equals: symbol,
+          mode: "insensitive",
+        },
       },
       orderBy: {
         createdAt: "desc",
