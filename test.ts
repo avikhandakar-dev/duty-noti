@@ -1,32 +1,25 @@
 import prisma from "@/src/lib/prisma";
 import { subDays, subMinutes } from "date-fns";
+import { sendPushNotificationsInBatches } from "./src/job/aiService";
 
 const main = async () => {
-  const today = new Date();
-  const threeDaysAgo = new Date(
-    today.getFullYear(),
-    today.getMonth(),
-    today.getDate() - 3
-  );
-  console.log(threeDaysAgo);
-  const plans = await prisma.activePlan.findMany({
+  const user = await prisma.user.findUnique({
     where: {
-      plan: {
-        isTrial: false,
-      },
-      expiresOn: {
-        gte: threeDaysAgo,
-        lte: today,
-      },
-      alertCount: 0,
-    },
-    select: {
-      userId: true,
-      id: true,
+      email: "avikhwork@gmail.com",
     },
   });
-  const userIds = plans.map((plan) => plan.userId);
-  console.log(userIds);
+  const pushTokens = await prisma.pushNotificationToken.findMany({
+    where: {
+      userId: user?.clerkId,
+      token: {
+        startsWith: "ExponentPushToken",
+      },
+    },
+  });
+  const tokens = pushTokens.map((token) => token.token);
+  console.log(tokens);
+
+  await sendPushNotificationsInBatches("Test", "Test", tokens);
 };
 
 main();
