@@ -512,7 +512,26 @@ async function updateNews(data: any) {
         }/${Math.ceil(markets.length / marketBatchSize)}`
       );
     }
+    await sendMail({
+      from: "server@dutyai.app",
+      fromName: "Duty AI",
+      to: "team@dutyai.app",
+      subject: "Successfully updated news",
+      html: `
+      <p>Successfully updated news</p>
+      `,
+    });
   } catch (error: any) {
+    await sendMail({
+      from: "server@dutyai.app",
+      fromName: "Duty AI",
+      to: "team@dutyai.app",
+      subject: "Failed to update news",
+      html: `
+      <p>Failed to update news</p>
+      <p>Error: ${error.message}</p>
+      `,
+    });
     throw new Error(error.message);
   }
 }
