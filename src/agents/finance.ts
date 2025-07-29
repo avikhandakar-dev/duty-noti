@@ -478,7 +478,7 @@ You can find the tv_chart_link in the content`;
 // Finance Agent Class with proper typing
 class FinanceAgent {
   private query: string;
-  private memory: CoreMessage[];
+  // private memory: CoreMessage[];
   private messageId: string;
   private convId: string;
   private username: string;
@@ -486,14 +486,14 @@ class FinanceAgent {
 
   constructor(
     query: string,
-    memory: CoreMessage[],
+    // memory: CoreMessage[],
     messageId: string,
     convId: string,
     username: string,
     userId: string
   ) {
     this.query = query;
-    this.memory = memory;
+    // this.memory = memory;
     this.messageId = messageId;
     this.convId = convId;
     this.username = username;
@@ -511,7 +511,7 @@ class FinanceAgent {
           role: "system",
           content: getSystemContent(this.username),
         },
-        ...this.memory,
+        // ...this.memory,
         {
           role: "user",
           content: this.query,
@@ -542,7 +542,7 @@ class FinanceAgent {
           role: "system",
           content: getSystemContent(this.username),
         },
-        ...this.memory,
+        // ...this.memory,
         {
           role: "user",
           content: this.query,

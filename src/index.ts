@@ -23,6 +23,7 @@ import { startPlanEndScheduler } from "./cron/planEnd";
 import { startProfitHoldingsScheduler } from "./cron/portfolioProfit";
 import { startLossHoldingsScheduler } from "./cron/portfolioLoss";
 import { newsRoutes } from "./routes/newsRoutes";
+import { chatRoutes } from "./routes/chatRoutes";
 
 const app = express();
 const httpServer = createServer(app);
@@ -51,6 +52,7 @@ app.use("/noti", notiRoutes);
 app.use("/auth", authRoutes);
 app.use("/update", updateRoutes);
 app.use("/news", newsRoutes);
+app.use("/chat", chatRoutes);
 startNoPortfolioScheduler();
 startNoHoldingsTodayScheduler();
 startHasHoldingsScheduler();
