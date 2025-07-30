@@ -63,10 +63,11 @@ app.use(errorHandlerMiddleware);
 app.use(notFoundMiddleware);
 
 const port = process.env.PORT || 1339;
+const host = "0.0.0.0"; // Ensure server is accessible on the local network
 const start = async () => {
   try {
-    httpServer.listen(port, () => {
-      console.log(`Server is listening on port ${port}...`);
+    httpServer.listen({ port: Number(port), host }, () => {
+      console.log(`Server is listening on http://${host}:${port}`);
     });
     workers.init();
   } catch (error) {
