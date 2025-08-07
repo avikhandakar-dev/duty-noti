@@ -27,6 +27,7 @@ model User {
     pushTokens             PushNotificationToken[]
     lastReadAll            DateTime                @default(now())
     lastViewAll            DateTime                @default(now())
+    favorites              FavMarketData[]
 
     @@index([clerkId])
 }
@@ -545,8 +546,8 @@ model MarketData {
     pivot_m_classic_s2                        String?
     pivot_m_classic_s3                        String?
 
-    createdAt    DateTime      @default(now()) @map("created_at")
-    updatedAt    DateTime      @updatedAt @map("updated_at")
+    createdAt    DateTime        @default(now()) @map("created_at")
+    updatedAt    DateTime        @updatedAt @map("updated_at")
     rransactions Transaction[]
     holdings     Holding[]
     R15M         R15M?
@@ -556,8 +557,22 @@ model MarketData {
     R4H          R4H?
     R1W          R1W?
     R1M          R1M?
+    favs         FavMarketData[]
 
     @@unique([symbol, country])
+}
+
+model FavMarketData {
+    id           String      @id @default(cuid())
+    user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId       String
+    symbol       String
+    marketData   MarketData? @relation(fields: [marketDataId], references: [id], onDelete: Cascade)
+    marketDataId String?
+    createdAt    DateTime    @default(now()) @map("created_at")
+    updatedAt    DateTime    @updatedAt @map("updated_at")
+
+    @@unique([userId, symbol])
 }
 
 model R15M {
@@ -1584,4 +1599,16 @@ model News {
     bn        String?
     createdAt DateTime @default(now()) @map("created_at")
     updatedAt DateTime @updatedAt @map("updated_at")
+}
+
+model RssNews {
+    id          String   @id @default(cuid())
+    title       String
+    url         String   @unique
+    summary     String?
+    content     String?
+    image       String?
+    publishedAt DateTime @default(now())
+    createdAt   DateTime @default(now()) @map("created_at")
+    updatedAt   DateTime @updatedAt @map("updated_at")
 }

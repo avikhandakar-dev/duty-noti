@@ -1,4 +1,5 @@
 import Parser from "rss-parser";
+import { scrapeNews } from "./news-extractor";
 
 type CustomItem = {
   title?: string;
@@ -55,35 +56,35 @@ function extractImage(item: CustomItem): string | null {
   return null;
 }
 
-const main = async () => {
-  const feeds = [
-    "https://www.somoynews.tv/rss.xml",
-    "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml",
-    "https://feeds.bbci.co.uk/news/rss.xml",
-    "https://www.reddit.com/.rss",
-  ];
-
-  for (const url of feeds) {
-    try {
-      const feed = await parser.parseURL(url);
-      console.log(`\n--- Feed: ${feed.title} ---`);
-
-      const normalizedItems: NormalizedItem[] = feed.items
-        .slice(0, 5)
-        .map((item) => ({
-          title: item.title || "",
-          url: item.link || "",
-          summary:
-            item.contentSnippet || item.content || item.description || "",
-          publishedAt: item.isoDate || item.pubDate || "",
-          image: extractImage(item),
-        }));
-
-      normalizedItems.forEach((item) => console.log(item));
-    } catch (err: any) {
-      console.error(`Failed to fetch ${url}:`, err.message);
+export async function extractRSSFeed(url: string) {
+  try {
+    const feed = await parser.parseURL(url);
+    const normalizedItems: NormalizedItem[] = feed.items.map((item) => ({
+      title: item.title || "",
+      url: item.link || "",
+      summary: item.contentSnippet || item.content || item.description || "",
+      publishedAt: item.isoDate || item.pubDate || "",
+      image: extractImage(item),
+    }));
+    const result = [];
+    for (const item of normalizedItems) {
+      const newsDetails = await scrapeNews(item.url);
+      if (newsDetails.success && newsDetails.data) {
+        result.push({
+          ...item,
+          image: item.image || newsDetails.data.coverPhoto,
+          content: newsDetails.data.content,
+        });
+      } else {
+        result.push({
+          ...item,
+          content: "",
+        });
+      }
     }
+    return result;
+  } catch (error) {
+    console.log(error);
+    return [];
   }
-};
-
-main();
+}

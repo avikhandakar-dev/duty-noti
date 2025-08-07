@@ -2,6 +2,7 @@ import axios from "axios";
 import prisma from "../lib/prisma";
 import { redisCache } from "../lib/redis";
 import { sendMail } from "../lib/mail";
+import { extractRSSFeed } from "../lib/rss-feed";
 
 const addToAIQueue = (operationType: string) => {
   switch (operationType) {
@@ -19,6 +20,8 @@ const addToAIQueue = (operationType: string) => {
       return sendPushNotiReaction;
     case "UPDATE-NEWS":
       return updateNews;
+    case "UPDATE-RSS-NEWS":
+      return updateRssNews;
     case "UPDATE-ALL-STOCK-TV":
       return updateAllStockTv;
     default:
@@ -529,6 +532,59 @@ async function updateNews(data: any) {
       subject: "Failed to update news",
       html: `
       <p>Failed to update news</p>
+      <p>Error: ${error.message}</p>
+      `,
+    });
+    throw new Error(error.message);
+  }
+}
+
+async function updateRssNews(data: any) {
+  try {
+    const { url } = data;
+    console.log("Started updating RSS news from - ", url);
+    const news = await extractRSSFeed(url);
+    for (const item of news) {
+      await prisma.rssNews.upsert({
+        where: {
+          url: item.url,
+        },
+        update: {
+          title: item.title,
+          summary: item.summary,
+          content: item.content,
+          image: (item.image as string) || "",
+          publishedAt: new Date(item.publishedAt),
+        },
+        create: {
+          title: item.title,
+          url: item.url,
+          summary: item.summary,
+          content: item.content,
+          image: (item.image as string) || "",
+          publishedAt: new Date(item.publishedAt),
+        },
+      });
+      console.log("Scraped news - ", item.title, item.url);
+    }
+    console.log("Successfully updated RSS news from - ", url);
+    // await sendMail({
+    //   from: "server@dutyai.app",
+    //   fromName: "Duty AI",
+    //   to: "team@dutyai.app",
+    //   subject: "Successfully updated news",
+    //   html: `
+    //   <p>Successfully updated news</p>
+    //   `,
+    // });
+  } catch (error: any) {
+    await sendMail({
+      from: "server@dutyai.app",
+      fromName: "Duty AI",
+      to: "team@dutyai.app",
+      subject: "Failed to scrape RSS news",
+      html: `
+      <p>Failed to scrape RSS news</p>
       <p>Error: ${error.message}</p>
       `,
     });

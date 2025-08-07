@@ -20,6 +20,21 @@ const updateNews = async (req: any, res: Response) => {
   }
 };
 
+const updateRssNews = async (req: any, res: Response) => {
+  const { url } = req.body;
+  if (!url) throw new BadRequestError("URL is required");
+  try {
+    await aiQueue.add(`update-rss-news`, {
+      queueType: "UPDATE-RSS-NEWS",
+      url,
+    });
+    res.status(StatusCodes.OK).json({ success: true });
+  } catch (error: any) {
+    console.log(error);
+    throw new BadRequestError(error.message || "Something went wrong!");
+  }
+};
+
 const getNewsBySymbol = async (req: any, res: Response) => {
   try {
     const { symbol } = req.params;
@@ -43,4 +58,19 @@ const getNewsBySymbol = async (req: any, res: Response) => {
   }
 };
 
-export { updateNews, getNewsBySymbol };
+const getRssNews = async (req: any, res: Response) => {
+  try {
+    const news = await prisma.rssNews.findMany({
+      orderBy: {
+        publishedAt: "desc",
+      },
+      take: 10,
+    });
+    res.status(StatusCodes.OK).json({ news });
+  } catch (error: any) {
+    console.log(error);
+    throw new BadRequestError(error.message || "Something went wrong!");
+  }
+};
+
+export { updateNews, getNewsBySymbol, updateRssNews, getRssNews };

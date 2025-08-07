@@ -10,4 +10,5 @@ export const AIOperationTypes = [
   "SEND-PUSH-NOTIFICATION-REACTION",
   "UPDATE-NEWS",
   "UPDATE-ALL-STOCK-TV",
+  "UPDATE-RSS-NEWS",
 ];
