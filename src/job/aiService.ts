@@ -333,7 +333,7 @@ async function sendPushNotiToFreeUser(data: any) {
   try {
     const { title, body, saveNotification } = data;
     const nowPlus7Days = new Date();
-    nowPlus7Days.setDate(nowPlus7Days.getDate() + 7);
+    nowPlus7Days.setDate(nowPlus7Days.getDate() - 7);
 
     const notFreeUsers = await prisma.activePlan.findMany({
       where: {
