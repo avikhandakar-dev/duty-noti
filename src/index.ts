@@ -58,7 +58,7 @@ startNoHoldingsTodayScheduler();
 startHasHoldingsScheduler();
 startPlanEndScheduler();
 startProfitHoldingsScheduler();
-startLossHoldingsScheduler();
+// startLossHoldingsScheduler();
 app.use(errorHandlerMiddleware);
 app.use(notFoundMiddleware);
 
