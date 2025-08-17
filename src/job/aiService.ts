@@ -159,7 +159,7 @@ export async function sendPushNotificationsInBatches(
   tokens: string[]
 ) {
   const endpoint = "https://exp.host/--/api/v2/push/send";
-  const batchSize = 100;
+  const batchSize = 600;
   for (let i = 0; i < tokens.length; i += batchSize) {
     const batch = tokens.slice(i, i + batchSize);
 
