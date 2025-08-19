@@ -545,6 +545,8 @@ model MarketData {
     pivot_m_classic_s1                        String?
     pivot_m_classic_s2                        String?
     pivot_m_classic_s3                        String?
+    bbpower                                   String?
+    rec_bbpower                               String?
 
     createdAt    DateTime        @default(now()) @map("created_at")
     updatedAt    DateTime        @updatedAt @map("updated_at")
@@ -1306,6 +1308,15 @@ model R1M {
     pivot_m_demark_middle String?
     pivot_m_demark_s1     String?
 
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+}
+
+model SearchFilter {
+    id        String   @id @default(cuid())
+    userId    String
+    name      String
+    filters   Json
     createdAt DateTime @default(now()) @map("created_at")
     updatedAt DateTime @updatedAt @map("updated_at")
 }

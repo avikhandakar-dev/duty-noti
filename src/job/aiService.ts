@@ -805,6 +805,8 @@ async function updateAllStockTv(data: any) {
       "Pivot.M.Classic.S1",
       "Pivot.M.Classic.S2",
       "Pivot.M.Classic.S3",
+      "BBPower",
+      "Rec.BBPower",
     ];
 
     const AllRes = [
