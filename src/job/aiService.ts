@@ -3,6 +3,7 @@ import prisma from "../lib/prisma";
 import { redisCache } from "../lib/redis";
 import { sendMail } from "../lib/mail";
 import { extractRSSFeed } from "../lib/rss-feed";
+import { chatCompletion } from "../lib/ai.utils";
 
 const addToAIQueue = (operationType: string) => {
   switch (operationType) {
@@ -24,6 +25,9 @@ const addToAIQueue = (operationType: string) => {
       return updateRssNews;
     case "UPDATE-ALL-STOCK-TV":
       return updateAllStockTv;
+    case "UPDATE-MARKET-HISTORY":
+      return updateMarketHistory;
+
     default:
       throw new Error("Invalid operation type");
   }
@@ -545,22 +549,31 @@ async function updateRssNews(data: any) {
     console.log("Started updating RSS news from - ", url);
     const news = await extractRSSFeed(url);
     for (const item of news) {
+      const altTitlePrompt = `Generate a short title in Bangla for the following content: ${item.title} \n\n Include proper one emoji in the begining of the title`;
+      const altTitle = await chatCompletion(altTitlePrompt);
+
+      const altSummaryPrompt = `Generate a short summary in Bangla for the following news content: ${item.summary}`;
+      const altSummary = await chatCompletion(altSummaryPrompt);
+
+      const altContentPrompt = `Generate a short content in Bangla for the following news content: ${item.content}`;
+      const altContent = await chatCompletion(altContentPrompt);
+
       await prisma.rssNews.upsert({
         where: {
           url: item.url,
         },
         update: {
-          title: item.title,
-          summary: item.summary,
-          content: item.content,
+          title: altTitle || "",
+          summary: altSummary || "",
+          content: altContent || "",
           image: (item.image as string) || "",
           publishedAt: new Date(item.publishedAt),
         },
         create: {
-          title: item.title,
+          title: altTitle || "",
           url: item.url,
-          summary: item.summary,
-          content: item.content,
+          summary: altSummary || "",
+          content: altContent || "",
           image: (item.image as string) || "",
           publishedAt: new Date(item.publishedAt),
         },
@@ -916,6 +929,48 @@ async function updateAllStockTv(data: any) {
       return data;
     };
 
+    const mutualFundSymbols = [
+      "DSEBD:1JANATAMF",
+      "DSEBD:1STPRIMFMF",
+      "DSEBD:ABB1STMF",
+      "DSEBD:AIBL1STIMF",
+      "DSEBD:ATCSLGF",
+      "DSEBD:CAPITECGBF",
+      "DSEBD:CAPMBDBLMF",
+      "DSEBD:CAPMIBBLMF",
+      "DSEBD:DBH1STMF",
+      "DSEBD:EBL1STMF",
+      "DSEBD:EBLNRBMF",
+      "DSEBD:EXIM1STMF",
+      "DSEBD:FBFIF",
+      "DSEBD:GLDNJMF",
+      "DSEBD:GRAMEENS2",
+      "DSEBD:GREENDELMF",
+      "DSEBD:ICB2NDNRB",
+      "DSEBD:ICB3RDNRB",
+      "DSEBD:ICBAGRANI1",
+      "DSEBD:ICBAMCL2ND",
+      "DSEBD:ICBEPMF1S1",
+      "DSEBD:ICBSONALI1",
+      "DSEBD:IFILISLMF1",
+      "DSEBD:LRGLOBMF1",
+      "DSEBD:MBL1STMF",
+      "DSEBD:NCCBLMF1",
+      "DSEBD:NLI1STMF",
+      "DSEBD:PF1STMF",
+      "DSEBD:PHPMF1",
+      "DSEBD:POPULAR1MF",
+      "DSEBD:PRIME1ICBA",
+      "DSEBD:RELIANCE1",
+      "DSEBD:SEBL1STMF",
+      "DSEBD:SEMLFBSLGF",
+      "DSEBD:SEMLIBBLSF",
+      "DSEBD:SEMLLECMF",
+      "DSEBD:TRUSTB1MF",
+      "DSEBD:VAMLBDMF1",
+      "DSEBD:VAMLRBBF",
+    ];
+
     const request = await fetch(EndPoint, {
       method: "POST",
       headers: {
@@ -936,11 +991,27 @@ async function updateAllStockTv(data: any) {
         preset: "all_stocks",
       }),
     });
+    const stockResponse = await request.json();
+
+    const mfReq = await fetch(
+      "https://scanner.tradingview.com/bangladesh/scan",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          symbols: { tickers: mutualFundSymbols, query: { types: [] } },
+          columns: AllRes,
+          ignore_unknown_fields: false,
+        }),
+      }
+    );
+    const mfResponse = await mfReq.json();
+
+    const allData = [...(stockResponse.data || []), ...(mfResponse.data || [])];
 
     const final = [];
-    const response: any = await request.json();
 
-    for (let item of response.data) {
+    for (let item of allData) {
       const symbol = item.d[0];
 
       // Extract default market data
@@ -1083,6 +1154,8 @@ async function updateAllStockTv(data: any) {
 
     // io.emit("portfolio-update", "all");
 
+    // Mutual Fund
+
     const newData = await prisma.marketData.findMany({
       where: {
         country: "BD",
@@ -1132,6 +1205,86 @@ async function updateAllStockTv(data: any) {
       <p>${error.message}</p>
       `,
     });
+    throw new Error(error.message);
+  }
+}
+
+async function updateMarketHistory(data: any) {
+  try {
+    const allMarket = await prisma.marketData.findMany({
+      where: {
+        country: "BD",
+      },
+      select: {
+        symbol: true,
+      },
+    });
+
+    let i = 0;
+    for (const market of allMarket) {
+      const API_ENDPOINT_R15M = `https://stocknow.com.bd/api/v1/instruments/${market.symbol}/history?data2=true&resolution=15&skip=0`;
+      const API_ENDPOINT_R30M = `https://stocknow.com.bd/api/v1/instruments/${market.symbol}/history?data2=true&resolution=30&skip=0`;
+      const API_ENDPOINT_R1H = `https://stocknow.com.bd/api/v1/instruments/${market.symbol}/history?data2=true&resolution=60&skip=0`;
+      const API_ENDPOINT_R2H = `https://stocknow.com.bd/api/v1/instruments/${market.symbol}/history?data2=true&resolution=120&skip=0`;
+      const API_ENDPOINT_R4H = `https://stocknow.com.bd/api/v1/instruments/${market.symbol}/history?data2=true&resolution=240&skip=0`;
+      const API_ENDPOINT_R1D = `https://stocknow.com.bd/api/v1/instruments/${market.symbol}/history?data2=true&resolution=1D&skip=0`;
+      const API_ENDPOINT_R1W = `https://stocknow.com.bd/api/v1/instruments/${market.symbol}/history?data2=true&resolution=1W&skip=0`;
+      const API_ENDPOINT_R1M = `https://stocknow.com.bd/api/v1/instruments/${market.symbol}/history?data2=true&resolution=1M&skip=0`;
+      const response_15 = await fetch(API_ENDPOINT_R15M);
+      const response_30 = await fetch(API_ENDPOINT_R30M);
+      const response_1H = await fetch(API_ENDPOINT_R1H);
+      const response_2H = await fetch(API_ENDPOINT_R2H);
+      const response_4H = await fetch(API_ENDPOINT_R4H);
+      const response_1D = await fetch(API_ENDPOINT_R1D);
+      const response_1W = await fetch(API_ENDPOINT_R1W);
+      const response_1M = await fetch(API_ENDPOINT_R1M);
+      const data_15 = await response_15.json();
+      const data_30 = await response_30.json();
+      const data_1H = await response_1H.json();
+      const data_2H = await response_2H.json();
+      const data_4H = await response_4H.json();
+      const data_1D = await response_1D.json();
+      const data_1W = await response_1W.json();
+      const data_1M = await response_1M.json();
+
+      const date = new Date().toISOString().split("T")[0];
+      await prisma.marketHistoryData.upsert({
+        where: {
+          symbol_date: {
+            symbol: market.symbol,
+            date,
+          },
+        },
+        create: {
+          date,
+          country: "BD",
+          symbol: market.symbol,
+          R15M: JSON.stringify(data_15),
+          R30M: JSON.stringify(data_30),
+          R1H: JSON.stringify(data_1H),
+          R2H: JSON.stringify(data_2H),
+          R4H: JSON.stringify(data_4H),
+          R1D: JSON.stringify(data_1D),
+          R1W: JSON.stringify(data_1W),
+          R1M: JSON.stringify(data_1M),
+        },
+        update: {
+          R15M: JSON.stringify(data_15),
+          R30M: JSON.stringify(data_30),
+          R1H: JSON.stringify(data_1H),
+          R2H: JSON.stringify(data_2H),
+          R4H: JSON.stringify(data_4H),
+          R1D: JSON.stringify(data_1D),
+          R1W: JSON.stringify(data_1W),
+          R1M: JSON.stringify(data_1M),
+        },
+      });
+      i++;
+      console.log(`${i}/${allMarket.length} -- Done`);
+    }
+    console.log("All Done!");
+  } catch (error: any) {
+    console.log(error);
     throw new Error(error.message);
   }
 }

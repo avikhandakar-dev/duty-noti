@@ -1,37 +1,156 @@
 import prisma from "@/src/lib/prisma";
 
 const main = async () => {
-  const nowPlus7Days = new Date();
-  nowPlus7Days.setDate(nowPlus7Days.getDate() - 7);
+  const fields = [
+    "name",
+    "description",
+    "logoid",
+    "update_mode",
+    "type",
+    "close",
+    "pricescale",
+    "minmov",
+    "fractional",
+    "minmove2",
+    "currency",
+    "change",
+    "volume",
+    "relative_volume_10d_calc",
+    "market_cap_basic",
+    "fundamental_currency_code",
+    "price_earnings_ttm",
+    "earnings_per_share_diluted_ttm",
+    "earnings_per_share_diluted_yoy_growth_ttm",
+    "dividends_yield_current",
+    "sector.tr",
+    "market",
+    "sector",
+    "recommendation_mark",
+    "Perf.1Y.MarketCap",
+    "price_earnings_growth_ttm",
+    "price_sales_current",
+    "price_book_fq",
+    "price_to_cash_f_operating_activities_ttm",
+    "price_free_cash_flow_ttm",
+    "price_to_cash_ratio",
+    "enterprise_value_current",
+    "enterprise_value_to_revenue_ttm",
+    "enterprise_value_to_ebit_ttm",
+    "enterprise_value_ebitda_ttm",
+    "dps_common_stock_prim_issue_fy",
+    "dps_common_stock_prim_issue_fq",
+    "dividends_yield",
+    "dividend_payout_ratio_ttm",
+    "dps_common_stock_prim_issue_yoy_growth_fy",
+    "continuous_dividend_payout",
+    "continuous_dividend_growth",
+    "gross_margin_ttm",
+    "operating_margin_ttm",
+    "pre_tax_margin_ttm",
+    "net_margin_ttm",
+    "free_cash_flow_margin_ttm",
+    "return_on_assets_fq",
+    "return_on_equity_fq",
+    "return_on_invested_capital_fq",
+    "research_and_dev_ratio_ttm",
+    "sell_gen_admin_exp_other_ratio_ttm",
+    "total_revenue_ttm",
+    "total_revenue_yoy_growth_ttm",
+    "gross_profit_ttm",
+    "oper_income_ttm",
+    "net_income_ttm",
+    "ebitda_ttm",
+    "total_assets_fq",
+    "total_current_assets_fq",
+    "cash_n_short_term_invest_fq",
+    "total_liabilities_fq",
+    "total_debt_fq",
+    "net_debt_fq",
+    "total_equity_fq",
+    "current_ratio_fq",
+    "quick_ratio_fq",
+    "debt_to_equity_fq",
+    "cash_n_short_term_invest_to_total_debt_fq",
+    "cash_f_operating_activities_ttm",
+    "cash_f_investing_activities_ttm",
+    "cash_f_financing_activities_ttm",
+    "free_cash_flow_ttm",
+    "capital_expenditures_ttm",
+    "Recommend.All",
+    "Recommend.MA",
+    "Recommend.Other",
+    "RSI",
+    "Mom",
+    "AO",
+    "CCI20",
+    "Stoch.K",
+    "Stoch.D",
+    "MACD.macd",
+    "MACD.signal",
+    "Rec.Stoch.RSI",
+    "Stoch.RSI.K",
+    "Rec.WR",
+    "W.R",
+    "EMA10",
+    "SMA10",
+    "EMA20",
+    "SMA20",
+    "EMA30",
+    "SMA30",
+    "EMA50",
+    "SMA50",
+    "EMA100",
+    "SMA100",
+    "EMA200",
+    "SMA200",
+    "Rec.Ichimoku",
+    "Ichimoku.BLine",
+    "Rec.VWMA",
+    "VWMA",
+    "Rec.HullMA9",
+    "HullMA9",
+    "Pivot.M.Classic.R3",
+    "Pivot.M.Classic.R2",
+    "Pivot.M.Classic.R1",
+    "Pivot.M.Classic.Middle",
+    "Pivot.M.Classic.S1",
+    "Pivot.M.Classic.S2",
+    "Pivot.M.Classic.S3",
+    "BBPower",
+    "Rec.BBPower",
+  ];
 
-  const notFreeUsers = await prisma.activePlan.findMany({
-    where: {
-      expiresOn: { gt: nowPlus7Days },
+  const body = {
+    symbols: {
+      tickers: ["DSEBD:SEMLLECMF", "DSEBD:PHPMF1", "DSEBD:VAMLBDMF1"],
+      query: { types: [] },
     },
-    select: {
-      user: {
-        select: {
-          clerkId: true,
-        },
-      },
-    },
-  });
-  console.log("notFreeUsers", notFreeUsers.length);
+    columns: [
+      "name",
+      "description",
+      "close",
+      "volume",
+      "market_cap_basic",
+      "change",
+      "Perf.1M",
+      "Perf.6M",
+      "Perf.YTD",
+      "Perf.Y",
+      "Recommend.All",
+      "RSI",
+      "MACD.macd",
+      "MACD.signal",
+    ],
+  };
 
-  const userIds = notFreeUsers.map((user) => user.user.clerkId);
-  const pushTokens = await prisma.pushNotificationToken.findMany({
-    where: {
-      userId: {
-        notIn: userIds,
-      },
-      // user: {
-      //   notificationPreference: {
-      //     enableShortNotifications: true,
-      //   },
-      // },
-    },
+  const res = await fetch("https://scanner.tradingview.com/bangladesh/scan", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
   });
-  console.log("pushTokens", pushTokens.length);
+
+  const data = await res.json();
+  console.log(data.data);
 };
 
 main();

@@ -1623,3 +1623,22 @@ model RssNews {
     createdAt   DateTime @default(now()) @map("created_at")
     updatedAt   DateTime @updatedAt @map("updated_at")
 }
+
+model MarketHistoryData {
+    id        String   @id @default(cuid())
+    symbol    String
+    country   String   @default("BD")
+    date      String
+    R15M      String
+    R30M      String
+    R1H       String
+    R2H       String
+    R4H       String
+    R1D       String
+    R1W       String
+    R1M       String
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    @@unique([symbol, date])
+}

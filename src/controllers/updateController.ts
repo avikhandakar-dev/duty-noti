@@ -1131,6 +1131,18 @@ const allStockTv = async (req: any, res: Response) => {
   }
 };
 
+const marketHistoryData = async (req: any, res: Response) => {
+  try {
+    await aiQueue.add(`update-market-history`, {
+      queueType: "UPDATE-MARKET-HISTORY",
+    });
+    res.status(StatusCodes.OK).json({ success: true });
+  } catch (error) {
+    console.log(error);
+    throw new BadRequestError("Something went wrong!");
+  }
+};
+
 export {
   indexTvJp,
   presetTvJp,
@@ -1140,4 +1152,5 @@ export {
   dsebdIndex,
   bdCategory,
   allStockTv,
+  marketHistoryData,
 };
